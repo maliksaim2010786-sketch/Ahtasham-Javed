@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  * {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #050508;
+}
+::-webkit-scrollbar-thumb {
+  background: #232238;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b3560;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(13, 13, 22, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark .glass-panel {
+  background: rgba(11, 11, 20, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html:not(.dark) .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+/* Animated spinning colorful light around icons and elements */
+@keyframes spin-beam {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1.5deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.55;
+    filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
+  }
+  50% {
+    opacity: 0.95;
+    filter: drop-shadow(0 0 18px rgba(168, 85, 247, 0.7));
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Spinning colorful light container for icons */
+.glow-rotating-ring {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 2.2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-rotating-ring::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: conic-gradient(
+    from 0deg,
+    #06b6d4 0deg,
+    #a855f7 72deg,
+    #ec4899 144deg,
+    #3b82f6 216deg,
+    #10b981 288deg,
+    #06b6d4 360deg
+  );
+  animation: spin-beam 3.5s linear infinite;
+  z-index: 0;
+}
+
+.glow-rotating-ring:hover::before {
+  animation-duration: 1.8s;
+}
+
+.glow-rotating-ring > .glow-rotating-inner {
+  position: relative;
+  z-index: 1;
+  background: #090914;
+  border-radius: calc(1rem - 2.2px);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+html:not(.dark) .glow-rotating-ring > .glow-rotating-inner {
+  background: #ffffff;
+}
+
+.glow-rotating-ring:hover {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 35px rgba(168, 85, 247, 0.25);
+  transform: translateY(-2px) scale(1.04);
+}
+
+/* Neon glows */
+.neon-glow-purple {
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
+}
+
+.neon-glow-blue {
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
+}
+
+.neon-border-purple {
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.neon-border-blue {
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+/* Shimmer animated text */
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #a855f7 25%,
+    #06b6d4 50%,
+    #f43f5e 75%,
+    #ffffff 100%
+  );
+  background-size: 250% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer-sweep 6s linear infinite;
+}
