@@ -115,7 +115,7 @@ export const HolographicCard3D: React.FC<HolographicCard3DProps> = ({
             src={imageSrc}
             alt={name}
             referrerPolicy="no-referrer"
-            className="relative z-10 max-h-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.9)] transition-transform duration-300"
+            className="relative z-10 max-h-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.9)] transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
           />
         </div>
 

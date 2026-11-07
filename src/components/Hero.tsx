@@ -182,10 +182,12 @@ export const Hero: React.FC<HeroProps> = ({ onHireClick, onNavigate }) => {
               </div>
             </div>
 
-            {/* Sub-label explaining interactivity */}
-            <div className="mt-3 text-center text-xs font-mono text-slate-400 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-              <span>Interactive 3D Profile · Move cursor or drag to interact</span>
+            {/* Sub-label explaining interactivity & Solo Clear View */}
+            <div className="mt-3 text-center text-xs font-mono text-slate-400 flex items-center justify-center gap-2 flex-wrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-cyan-300 font-medium">Hover over image for Solo Clear View</span>
+              <span className="text-slate-600">·</span>
+              <span>Drag to spin 360° in 3D</span>
             </div>
           </div>
 

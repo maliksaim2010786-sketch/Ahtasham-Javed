@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { playClickSound } from '../utils/audio';
+import { playClickSound, playHoverSound } from '../utils/audio';
 
 interface Hero3DProps {
   className?: string;
@@ -16,16 +16,22 @@ export const Hero3D: React.FC<Hero3DProps> = ({
   const [activeMode, setActiveMode] = useState<'avatar' | 'hologram' | 'orbit'>('avatar');
   const [speedMultiplier, setSpeedMultiplier] = useState<number>(1);
   const [isRotating, setIsRotating] = useState<boolean>(true);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [clearImageMode, setClearImageMode] = useState<boolean>(false);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
   // Mutable refs for Three.js render loop without remounting
   const modeRef = useRef<'avatar' | 'hologram' | 'orbit'>('avatar');
   const speedRef = useRef<number>(1);
   const rotatingRef = useRef<boolean>(true);
+  const isHoveredRef = useRef<boolean>(false);
+  const clearModeRef = useRef<boolean>(false);
 
   modeRef.current = activeMode;
   speedRef.current = speedMultiplier;
   rotatingRef.current = isRotating;
+  isHoveredRef.current = isHovered;
+  clearModeRef.current = clearImageMode;
 
   useEffect(() => {
     const container = mountRef.current;
@@ -48,7 +54,7 @@ export const Hero3D: React.FC<Hero3DProps> = ({
 
     // Scene & Camera
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x050508, 0.035);
+    scene.fog = new THREE.FogExp2(0x050508, 0.03);
 
     const camera = new THREE.PerspectiveCamera(
       42,
@@ -67,7 +73,7 @@ export const Hero3D: React.FC<Hero3DProps> = ({
     renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.35;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
 
@@ -80,19 +86,23 @@ export const Hero3D: React.FC<Hero3DProps> = ({
     controls.maxPolarAngle = Math.PI / 2 + 0.15;
     controls.minPolarAngle = Math.PI / 3 - 0.2;
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0x0f1123, 1.8);
+    // Studio Quality Lighting - High brightness on front portrait
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(ambientLight);
 
-    const purpleKeyLight = new THREE.PointLight(0xa855f7, 5, 20);
+    const frontKeyLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    frontKeyLight.position.set(0, 0.5, 4.5);
+    scene.add(frontKeyLight);
+
+    const purpleKeyLight = new THREE.PointLight(0xa855f7, 4.5, 20);
     purpleKeyLight.position.set(3, 2.5, 3.5);
     scene.add(purpleKeyLight);
 
-    const cyanRimLight = new THREE.PointLight(0x06b6d4, 5, 20);
+    const cyanRimLight = new THREE.PointLight(0x06b6d4, 4.5, 20);
     cyanRimLight.position.set(-3, -1, 3);
     scene.add(cyanRimLight);
 
-    const backGlowLight = new THREE.DirectionalLight(0x38bdf8, 2.2);
+    const backGlowLight = new THREE.DirectionalLight(0x38bdf8, 2.0);
     backGlowLight.position.set(0, 3, -4);
     scene.add(backGlowLight);
 
@@ -123,6 +133,8 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       emissiveIntensity: 0.9,
       roughness: 0.2,
       metalness: 0.9,
+      transparent: true,
+      opacity: 1,
     });
     const baseRing = new THREE.Mesh(baseRingGeo, baseRingMat);
     baseRing.rotation.x = Math.PI / 2;
@@ -136,6 +148,8 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       emissive: 0xa855f7,
       emissiveIntensity: 0.8,
       roughness: 0.2,
+      transparent: true,
+      opacity: 1,
     });
     const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
     innerRing.rotation.x = Math.PI / 2;
@@ -146,19 +160,47 @@ export const Hero3D: React.FC<Hero3DProps> = ({
     const portraitGroup = new THREE.Group();
     masterGroup.add(portraitGroup);
 
+    // Soft cyber aura plate behind portrait
+    const auraGeo = new THREE.PlaneGeometry(2.6, 2.6);
+    const auraCanvas = document.createElement('canvas');
+    auraCanvas.width = 256;
+    auraCanvas.height = 256;
+    const aCtx = auraCanvas.getContext('2d');
+    if (aCtx) {
+      const g = aCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      g.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+      g.addColorStop(0.45, 'rgba(168, 85, 247, 0.25)');
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      aCtx.fillStyle = g;
+      aCtx.fillRect(0, 0, 256, 256);
+    }
+    const auraTex = new THREE.CanvasTexture(auraCanvas);
+    auraTex.colorSpace = THREE.SRGBColorSpace;
+    const auraMat = new THREE.MeshBasicMaterial({
+      map: auraTex,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const auraMesh = new THREE.Mesh(auraGeo, auraMat);
+    auraMesh.position.z = -0.06;
+    portraitGroup.add(auraMesh);
+
     const textureLoader = new THREE.TextureLoader();
-    let portraitMat: THREE.MeshStandardMaterial;
+    let portraitMat: THREE.MeshBasicMaterial;
     let portraitMesh: THREE.Mesh;
 
-    // Default placeholder geometry
+    // High clarity geometry
     const portraitGeo = new THREE.PlaneGeometry(2.1, 2.7);
     
-    // Fallback material while texture loads
-    portraitMat = new THREE.MeshStandardMaterial({
-      color: 0x22223b,
+    // Unlit MeshBasicMaterial ensures 100% natural colors, razor-sharp suit and face details
+    portraitMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
       transparent: true,
       opacity: 0,
       side: THREE.DoubleSide,
+      alphaTest: 0.02,
     });
     portraitMesh = new THREE.Mesh(portraitGeo, portraitMat);
     portraitMesh.position.y = -0.05;
@@ -176,9 +218,7 @@ export const Hero3D: React.FC<Hero3DProps> = ({
         portraitMat.map = tex;
         portraitMat.color.setHex(0xffffff);
         portraitMat.transparent = true;
-        portraitMat.alphaTest = 0.08;
-        portraitMat.roughness = 0.25;
-        portraitMat.metalness = 0.15;
+        portraitMat.alphaTest = 0.02;
         portraitMat.opacity = 1;
         portraitMat.needsUpdate = true;
         setImageLoaded(true);
@@ -187,7 +227,7 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       () => {
         // Fallback
         portraitMat.color.setHex(0x9333ea);
-        portraitMat.opacity = 0.8;
+        portraitMat.opacity = 0.9;
       }
     );
 
@@ -216,6 +256,8 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       emissiveIntensity: 0.5,
       metalness: 0.9,
       roughness: 0.15,
+      transparent: true,
+      opacity: 0.85,
     });
     const ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
     ring1.rotation.x = Math.PI / 3;
@@ -229,6 +271,8 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       emissiveIntensity: 0.5,
       metalness: 0.85,
       roughness: 0.2,
+      transparent: true,
+      opacity: 0.85,
     });
     const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
     ring2.rotation.x = -Math.PI / 4;
@@ -244,6 +288,8 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       emissiveIntensity: 0.9,
       metalness: 0.9,
       roughness: 0.1,
+      transparent: true,
+      opacity: 1,
     });
     const satellitesGroup = new THREE.Group();
     masterGroup.add(satellitesGroup);
@@ -337,6 +383,10 @@ export const Hero3D: React.FC<Hero3DProps> = ({
     };
     window.addEventListener('mousemove', handlePointerMove);
 
+    // Dynamic smoothing variables for hover transitions
+    let overlayFade = 1.0;
+    let portraitScale = 1.0;
+
     // Animation Loop
     let animId = 0;
     const clock = new THREE.Clock();
@@ -355,6 +405,11 @@ export const Hero3D: React.FC<Hero3DProps> = ({
 
       const rotSpeed = rotatingRef.current ? speedRef.current : 0;
 
+      // Check whether user is hovering or has toggled Clear Image Mode
+      const isFocused = isHoveredRef.current || clearModeRef.current;
+      const targetOverlay = isFocused ? 0.0 : 1.0;
+      overlayFade = THREE.MathUtils.damp(overlayFade, targetOverlay, 8, delta);
+
       // Rotate gyroscopic rings
       ring1.rotation.z += 0.35 * delta * rotSpeed;
       ring1.rotation.y += 0.2 * delta * rotSpeed;
@@ -371,29 +426,43 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       // Oscillate scanning laser beam
       scanBeam.position.y = Math.sin(elapsed * 2.2) * 1.15;
 
-      // Floating gentle bobbing
-      portraitGroup.position.y = Math.sin(elapsed * 1.8) * 0.05;
+      // Smoothly hide rings, beam, and satellites during hover so ONLY the clear image shows
+      ring1Mat.opacity = 0.85 * overlayFade;
+      ring2Mat.opacity = 0.85 * overlayFade;
+      ring1.visible = overlayFade > 0.01;
+      ring2.visible = overlayFade > 0.01;
 
-      // Mode adaptations
+      scanBeam.visible = overlayFade > 0.01;
+      scanMat.opacity = (modeRef.current === 'hologram' ? 0.9 : 0.4) * overlayFade;
+
+      satellitesGroup.visible = overlayFade > 0.01;
+      const sScale = Math.max(0.001, overlayFade);
+      satellitesGroup.scale.set(sScale, sScale, sScale);
+
+      // Soften particle field to keep full focus on the clear portrait
+      particleMat.opacity = 0.15 + 0.6 * overlayFade;
+
+      // Gently scale up and center portrait on hover
+      const targetPortraitScale = isFocused ? 1.15 : 1.0;
+      portraitScale = THREE.MathUtils.damp(portraitScale, targetPortraitScale, 6, delta);
+      portraitGroup.scale.set(portraitScale, portraitScale, portraitScale);
+
+      // Floating gentle bobbing (relaxed during clear view)
+      portraitGroup.position.y = isFocused ? 0.02 : Math.sin(elapsed * 1.8) * 0.05;
+
+      // Mode adaptations when not in clear view
       const curMode = modeRef.current;
       if (curMode === 'hologram') {
-        scanBeam.visible = true;
-        scanMat.opacity = 0.9;
+        auraMat.opacity = 0.9;
         ring1Mat.emissiveIntensity = 0.8;
         ring2Mat.emissiveIntensity = 0.8;
-        portraitMat.emissive = new THREE.Color(0x06b6d4);
-        portraitMat.emissiveIntensity = 0.2;
       } else if (curMode === 'orbit') {
-        scanBeam.visible = false;
+        auraMat.opacity = 0.5;
         ring1Mat.emissiveIntensity = 0.6;
         ring2Mat.emissiveIntensity = 0.6;
-        portraitMat.emissive = new THREE.Color(0x9333ea);
-        portraitMat.emissiveIntensity = 0.15;
       } else {
         // avatar mode
-        scanBeam.visible = true;
-        scanMat.opacity = 0.4;
-        portraitMat.emissiveIntensity = 0.05;
+        auraMat.opacity = isFocused ? 0.85 : 0.6;
       }
 
       controls.update();
@@ -428,6 +497,9 @@ export const Hero3D: React.FC<Hero3DProps> = ({
       baseRingMat.dispose();
       innerRingGeo.dispose();
       innerRingMat.dispose();
+      auraGeo.dispose();
+      auraMat.dispose();
+      auraTex.dispose();
       portraitGeo.dispose();
       portraitMat.dispose();
       scanGeo.dispose();
@@ -452,55 +524,90 @@ export const Hero3D: React.FC<Hero3DProps> = ({
   }, [portraitSrc]);
 
   return (
-    <div className={`relative w-full h-full select-none ${className}`}>
+    <div
+      className={`relative w-full h-full select-none ${className}`}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        playHoverSound();
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
+    >
       {/* 3D WebGL Canvas */}
       <div
         ref={mountRef}
         className="w-full h-full cursor-grab active:cursor-grabbing"
-        title="Click and drag to rotate Ahtasham's 3D avatar & scene in 360°"
+        title="Hover to view clean clear portrait. Drag to rotate in 360°"
       />
 
+      {/* Floating Active Indicator when Clear View is triggered */}
+      {(isHovered || clearImageMode) && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1 rounded-full bg-black/85 backdrop-blur-md border border-cyan-400/50 shadow-[0_0_20px_rgba(6,182,212,0.5)] pointer-events-none animate-in fade-in zoom-in-95 duration-200">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+          <span className="text-[11px] font-mono font-bold tracking-wider text-cyan-300 uppercase">
+            Solo Clear Image View
+          </span>
+        </div>
+      )}
+
       {/* Floating 3D Interaction Control Dock */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 p-1.5 rounded-full bg-black/65 dark:bg-black/75 backdrop-blur-md border border-white/10 text-xs text-slate-300 shadow-xl max-w-[94%]">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 p-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/15 text-xs text-slate-300 shadow-2xl max-w-[96%]">
         <div className="flex items-center gap-1 px-1">
+          <button
+            onClick={() => {
+              playClickSound();
+              setClearImageMode(!clearImageMode);
+            }}
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+              clearImageMode
+                ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                : 'text-slate-300 hover:text-white bg-white/5 hover:bg-white/10'
+            }`}
+            title="Click to toggle Clear Portrait View on/off"
+          >
+            <span>✨</span>
+            <span>{clearImageMode ? 'Clear ON' : 'Clear Image'}</span>
+          </button>
+
           <button
             onClick={() => {
               playClickSound();
               setActiveMode('avatar');
             }}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-              activeMode === 'avatar'
+            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              activeMode === 'avatar' && !clearImageMode
                 ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            3D Avatar
+            Avatar
           </button>
           <button
             onClick={() => {
               playClickSound();
               setActiveMode('hologram');
             }}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-              activeMode === 'hologram'
+            className={`px-2 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              activeMode === 'hologram' && !clearImageMode
                 ? 'bg-cyan-600/80 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Holo Scan
+            Holo
           </button>
           <button
             onClick={() => {
               playClickSound();
               setActiveMode('orbit');
             }}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-              activeMode === 'orbit'
+            className={`px-2 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              activeMode === 'orbit' && !clearImageMode
                 ? 'bg-purple-600/80 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Cyber Orbit
+            Orbit
           </button>
         </div>
 
@@ -511,12 +618,12 @@ export const Hero3D: React.FC<Hero3DProps> = ({
             playClickSound();
             setIsRotating(!isRotating);
           }}
-          className={`px-2 py-1 rounded-full text-xs font-mono transition-colors ${
+          className={`px-2 py-1 rounded-full text-xs font-mono transition-colors cursor-pointer ${
             isRotating ? 'text-cyan-400' : 'text-slate-500'
           }`}
           title={isRotating ? 'Pause rotation' : 'Resume rotation'}
         >
-          {isRotating ? 'ROT:ON' : 'ROT:OFF'}
+          {isRotating ? 'ROT' : 'OFF'}
         </button>
 
         <button
@@ -524,7 +631,7 @@ export const Hero3D: React.FC<Hero3DProps> = ({
             playClickSound();
             setSpeedMultiplier((prev) => (prev === 1 ? 2 : prev === 2 ? 0.5 : 1));
           }}
-          className="px-2 py-1 rounded-full text-xs font-mono text-purple-400 hover:text-purple-300 transition-colors"
+          className="px-2 py-1 rounded-full text-xs font-mono text-purple-400 hover:text-purple-300 transition-colors cursor-pointer"
           title="Cycle orbital speed"
         >
           {speedMultiplier}x

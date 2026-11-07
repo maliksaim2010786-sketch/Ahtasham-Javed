@@ -5,9 +5,10 @@ import { playClickSound } from '../utils/audio';
 
 interface FooterProps {
   onNavigate?: (page: PageId) => void;
+  onOpenProfile?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenProfile }) => {
   const scrollToTop = () => {
     playClickSound();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -41,13 +42,43 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         {/* Top Row: Brand & Quick Navigation */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center md:text-left">
-            <button
-              onClick={() => handleLinkClick('home')}
-              className="text-lg font-bold tracking-tight text-white dark:text-white light:text-slate-900 font-display flex items-center justify-center md:justify-start gap-2 cursor-pointer"
-            >
-              <span className="w-2.5 h-2.5 rounded-sm bg-gradient-to-tr from-cyan-400 to-purple-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-              <span>AHTASHAM JAVED</span>
-            </button>
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  if (onOpenProfile) onOpenProfile();
+                  else handleLinkClick('home');
+                }}
+                className="cursor-pointer group"
+                title="Click to open full profile & photo"
+                aria-label="Open profile modal"
+              >
+                <div className="glow-rotating-ring w-10 h-10 rounded-full p-[2px] shadow-[0_0_10px_rgba(6,182,212,0.4)] group-hover:scale-110 transition-transform">
+                  <div className="glow-rotating-inner w-full h-full rounded-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                    <img
+                      src="/assets/aistudio/a7c15d4c-657d-49ff-8146-81cda0bb2807_e1ecb5b4.png"
+                      alt="Ahtasham Javed"
+                      className="w-full h-full object-cover object-top scale-125 translate-y-0.5"
+                    />
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleLinkClick('home')}
+                className="flex flex-col text-left cursor-pointer group"
+                title="Ahtasham Javed - Home"
+              >
+                <span className="font-display tracking-wider font-extrabold text-base text-white group-hover:text-cyan-400 transition-colors">
+                  AHTASHAM JAVED
+                </span>
+                <span className="text-[10px] font-mono tracking-widest text-cyan-400 -mt-0.5">
+                  3D WEB ARCHITECT
+                </span>
+              </button>
+            </div>
             <p className="text-xs text-slate-400">
               Creative Full-Stack Web Developer & 3D Web Architect
             </p>

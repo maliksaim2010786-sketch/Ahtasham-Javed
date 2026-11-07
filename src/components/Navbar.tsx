@@ -10,6 +10,7 @@ interface NavbarProps {
   viewMode: 'separate' | 'all';
   onToggleViewMode: () => void;
   onHireClick: () => void;
+  onOpenProfile?: () => void;
   isDark: boolean;
   toggleTheme: () => void;
 }
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   viewMode,
   onToggleViewMode,
   onHireClick,
+  onOpenProfile,
   isDark,
   toggleTheme,
 }) => {
@@ -70,18 +72,66 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
         
-        {/* Zone 1: Single text element wordmark */}
-        <button
-          onClick={() => handleNavClick('home')}
-          className="text-base sm:text-lg font-bold tracking-tight text-white dark:text-white light:text-slate-900 whitespace-nowrap shrink-0 group flex items-center gap-2.5 cursor-pointer"
-        >
-          <div className="glow-rotating-ring w-7 h-7 rounded-lg">
-            <div className="glow-rotating-inner rounded-[6px] text-[11px] font-black font-mono text-transparent bg-clip-text bg-gradient-to-tr from-cyan-400 to-purple-400">
-              AJ
+        {/* Zone 1: Developer Brand Logo with Ahtasham's photo & profile opener */}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Logo Avatar - Clicking opens the Profile & HD Photo Modal */}
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              if (onOpenProfile) {
+                onOpenProfile();
+              } else {
+                handleNavClick('home');
+              }
+            }}
+            className="relative group cursor-pointer focus:outline-none"
+            title="Click to open full profile & HD photo preview"
+            aria-label="Open profile modal"
+          >
+            <div className="glow-rotating-ring w-9 h-9 sm:w-10 sm:h-10 rounded-full p-[2px] shadow-[0_0_15px_rgba(6,182,212,0.45)] group-hover:scale-110 transition-transform duration-300">
+              <div className="glow-rotating-inner w-full h-full rounded-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                <img
+                  src="/assets/aistudio/a7c15d4c-657d-49ff-8146-81cda0bb2807_e1ecb5b4.png"
+                  alt="Ahtasham Javed"
+                  className="w-full h-full object-cover object-top scale-125 translate-y-0.5"
+                />
+              </div>
             </div>
-          </div>
-          <span className="font-display tracking-wider group-hover:text-shimmer transition-all">AHTASHAM JAVED</span>
-        </button>
+            {/* Active online pulse dot */}
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
+          </button>
+
+          {/* Logo Brand Typography - Navigates Home / Opens Profile */}
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              handleNavClick('home');
+            }}
+            className="flex flex-col text-left group cursor-pointer focus:outline-none"
+            title="Ahtasham Javed - Home"
+          >
+            <span className="font-display tracking-wider font-extrabold text-sm sm:text-base text-white dark:text-white light:text-slate-900 group-hover:text-shimmer transition-all leading-tight">
+              AHTASHAM JAVED
+            </span>
+            <span className="text-[10px] font-mono tracking-widest text-cyan-400 font-semibold uppercase flex items-center gap-1.5">
+              <span>3D Architect</span>
+              <span className="text-slate-600">·</span>
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  playClickSound();
+                  onOpenProfile?.();
+                }}
+                className="text-purple-400 hover:text-purple-300 cursor-pointer underline underline-offset-2"
+                title="Open Profile Modal"
+              >
+                Profile
+              </span>
+            </span>
+          </button>
+        </div>
 
         {/* Zone 2: Navigation Links (Clean single-line with active indicator) */}
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs xl:text-sm font-medium text-slate-300 dark:text-slate-300 light:text-slate-600">

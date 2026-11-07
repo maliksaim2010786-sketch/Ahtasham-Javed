@@ -18,6 +18,7 @@ import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 import { CustomCursor } from './components/CustomCursor';
 import { HireModal } from './components/HireModal';
+import { ProfileModal } from './components/ProfileModal';
 import { PaginationDock } from './components/PaginationDock';
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'separate' | 'all'>('separate');
   const [isDark, setIsDark] = useState(true);
   const [hireModalOpen, setHireModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedServiceForHire, setSelectedServiceForHire] = useState('Full-Stack Web Development');
 
   // Sync theme with HTML class
@@ -59,7 +61,18 @@ export default function App() {
   const handleNavigate = (page: PageId) => {
     setActivePage(page);
     window.location.hash = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (page === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setTimeout(() => {
+        const el = document.getElementById(page);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 30);
+    }
   };
 
   const toggleTheme = () => {
@@ -90,6 +103,7 @@ export default function App() {
         viewMode={viewMode}
         onToggleViewMode={toggleViewMode}
         onHireClick={() => handleOpenHire()}
+        onOpenProfile={() => setProfileModalOpen(true)}
         isDark={isDark}
         toggleTheme={toggleTheme}
       />
@@ -217,13 +231,25 @@ export default function App() {
       </div>
 
       {/* Footer */}
-      <Footer onNavigate={handleNavigate} />
+      <Footer 
+        onNavigate={handleNavigate}
+        onOpenProfile={() => setProfileModalOpen(true)}
+      />
 
       {/* Hire Me Interactive Modal */}
       <HireModal
         isOpen={hireModalOpen}
         onClose={() => setHireModalOpen(false)}
         defaultService={selectedServiceForHire}
+      />
+
+      {/* Profile & HD Photo Lightbox Modal */}
+      <ProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        onNavigateHome={() => handleNavigate('home')}
+        onHireClick={() => handleOpenHire()}
+        onViewProjects={() => handleNavigate('projects')}
       />
     </div>
   );
