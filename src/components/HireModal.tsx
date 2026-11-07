@@ -52,6 +52,7 @@ export const HireModal: React.FC<HireModalProps> = ({
           timeline,
           budget,
           details,
+          order_status: 'new',
           reply_status: 'pending',
           created_at: new Date().toISOString(),
         },

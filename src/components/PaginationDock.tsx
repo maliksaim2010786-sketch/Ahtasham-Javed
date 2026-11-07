@@ -19,7 +19,7 @@ const allPageSequence: { id: PageId; label: string; number: number; adminOnly?: 
   { id: 'process', label: 'Work Methodology', number: 6 },
   { id: 'testimonials', label: 'Client Reviews', number: 7 },
   { id: 'contact', label: 'Start Project', number: 8 },
-  { id: 'inbox', label: 'Client Messages', number: 9, adminOnly: true },
+  { id: 'inbox', label: 'Client Orders', number: 9, adminOnly: true },
 ];
 
 export const PaginationDock: React.FC<PaginationDockProps> = ({

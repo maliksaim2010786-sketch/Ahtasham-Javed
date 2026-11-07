@@ -55,7 +55,7 @@ create policy "Allow updating replies for contact_inquiries"
   with check (true);
 
 
--- 2. Create table for "Hire Me" proposals
+-- 2. Create table for Client Orders ("Hire Me" project requests)
 create table if not exists public.hire_requests (
   id uuid default gen_random_uuid() primary key,
   name text not null,
@@ -64,11 +64,18 @@ create table if not exists public.hire_requests (
   timeline text default '2 - 4 Weeks',
   budget text default '$3,000 - $5,000',
   details text,
+  order_status text default 'new', -- 'new' | 'in_progress' | 'proposal_sent' | 'completed' | 'cancelled'
   reply_message text,
   reply_status text default 'pending',
   replied_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Ensure order_status column exists if table was created previously
+alter table public.hire_requests add column if not exists order_status text default 'new';
+alter table public.hire_requests add column if not exists reply_message text;
+alter table public.hire_requests add column if not exists reply_status text default 'pending';
+alter table public.hire_requests add column if not exists replied_at timestamp with time zone;
 
 alter table public.hire_requests enable row level security;
 

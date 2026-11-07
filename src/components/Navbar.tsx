@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'process', label: 'Process' },
     { id: 'testimonials', label: 'Reviews' },
     { id: 'contact', label: 'Contact' },
-    { id: 'inbox', label: 'Messages', badge: 'Owner', adminOnly: true },
+    { id: 'inbox', label: 'Client Orders', badge: 'Owner', adminOnly: true },
   ];
 
   // Strictly hide Messages section if not logged in as Owner (malikahtashamjaved@gmail.com)

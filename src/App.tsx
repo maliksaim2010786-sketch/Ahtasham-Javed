@@ -318,7 +318,7 @@ export default function App() {
                       </div>
 
                       <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-                        The Client Messages & Inquiries Hub contains confidential inquiries and is exclusively restricted to the site owner (<span className="text-cyan-300 font-mono font-semibold">malikahtashamjaved@gmail.com</span>).
+                        The Client Orders & Inquiries Hub contains confidential client project orders and is exclusively restricted to authorized owner credentials.
                       </p>
 
                       <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
