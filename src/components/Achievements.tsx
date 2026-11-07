@@ -137,7 +137,7 @@ export const Achievements: React.FC = () => {
               <div
                 key={item.title}
                 onMouseEnter={() => playHoverSound()}
-                className="glass-panel rounded-3xl p-7 border border-white/10 dark:border-white/10 light:border-slate-200 hover:border-purple-500/40 transition-all duration-300 flex flex-col justify-between group"
+                className="glass-panel hover-card-3d rounded-3xl p-7 border border-white/10 dark:border-white/10 light:border-slate-200 cursor-pointer flex flex-col justify-between group"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">

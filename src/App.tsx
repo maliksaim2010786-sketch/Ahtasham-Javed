@@ -15,11 +15,14 @@ import { Process } from './components/Process';
 import { Achievements } from './components/Achievements';
 import { Testimonials } from './components/Testimonials';
 import { Contact } from './components/Contact';
+import { Inbox } from './components/Inbox';
 import { Footer } from './components/Footer';
 import { CustomCursor } from './components/CustomCursor';
 import { HireModal } from './components/HireModal';
 import { ProfileModal } from './components/ProfileModal';
 import { PaginationDock } from './components/PaginationDock';
+import { AuthGateway, AuthSession } from './components/AuthGateway';
+import { Lock } from 'lucide-react';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>('home');
@@ -28,6 +31,72 @@ export default function App() {
   const [hireModalOpen, setHireModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedServiceForHire, setSelectedServiceForHire] = useState('Full-Stack Web Development');
+
+  // Auth Session State (Remembered in browser)
+  const [authSession, setAuthSession] = useState<AuthSession>(() => {
+    try {
+      const stored = localStorage.getItem('ahtasham_portfolio_auth_session');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {
+      // ignore
+    }
+    return {
+      isAuthenticated: false,
+      email: '',
+      role: 'guest',
+    };
+  });
+
+  // Website open hone se pehle login / signin page aana chahiye
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('ahtasham_portfolio_auth_session');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.isAuthenticated) return false;
+      }
+    } catch {
+      // ignore
+    }
+    return true; // Show initial login gate
+  });
+
+  // Strict check: Only malikahtashamjaved@gmail.com with admin role has owner privileges
+  const isAdmin = 
+    authSession.isAuthenticated && 
+    authSession.email.trim().toLowerCase() === 'malikahtashamjaved@gmail.com' && 
+    authSession.role === 'admin';
+
+  const handleAuthSuccess = (session: AuthSession) => {
+    setAuthSession(session);
+    try {
+      localStorage.setItem('ahtasham_portfolio_auth_session', JSON.stringify(session));
+    } catch {
+      // ignore
+    }
+    setAuthModalOpen(false);
+  };
+
+  const handleLogout = () => {
+    const guestSession: AuthSession = {
+      isAuthenticated: false,
+      email: '',
+      role: 'guest',
+    };
+    setAuthSession(guestSession);
+    try {
+      localStorage.removeItem('ahtasham_portfolio_auth_session');
+    } catch {
+      // ignore
+    }
+    if (activePage === 'inbox') {
+      setActivePage('home');
+      window.location.hash = 'home';
+    }
+    setAuthModalOpen(true);
+  };
 
   // Sync theme with HTML class
   useEffect(() => {
@@ -42,7 +111,7 @@ export default function App() {
   // Read initial hash on load
   useEffect(() => {
     const hash = window.location.hash.replace('#', '') as PageId;
-    const validPages: PageId[] = ['home', 'about', 'skills', 'projects', 'services', 'process', 'testimonials', 'contact'];
+    const validPages: PageId[] = ['home', 'about', 'skills', 'projects', 'services', 'process', 'testimonials', 'contact', 'inbox'];
     if (validPages.includes(hash)) {
       setActivePage(hash);
     }
@@ -106,6 +175,10 @@ export default function App() {
         onOpenProfile={() => setProfileModalOpen(true)}
         isDark={isDark}
         toggleTheme={toggleTheme}
+        isAdmin={isAdmin}
+        userEmail={authSession.email}
+        onOpenAuth={() => setAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -126,6 +199,7 @@ export default function App() {
                   currentPage="home"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -137,6 +211,7 @@ export default function App() {
                   currentPage="about"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -148,6 +223,7 @@ export default function App() {
                   currentPage="skills"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -159,6 +235,7 @@ export default function App() {
                   currentPage="projects"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -170,6 +247,7 @@ export default function App() {
                   currentPage="services"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -182,6 +260,7 @@ export default function App() {
                   currentPage="process"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -193,6 +272,7 @@ export default function App() {
                   currentPage="testimonials"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
               </div>
             )}
@@ -204,7 +284,60 @@ export default function App() {
                   currentPage="contact"
                   onNavigate={handleNavigate}
                   onHireClick={() => handleOpenHire()}
+                  isAdmin={isAdmin}
                 />
+              </div>
+            )}
+
+            {activePage === 'inbox' && (
+              <div className="pt-4">
+                {isAdmin ? (
+                  <>
+                    <Inbox />
+                    <PaginationDock
+                      currentPage="inbox"
+                      onNavigate={handleNavigate}
+                      onHireClick={() => handleOpenHire()}
+                      isAdmin={isAdmin}
+                    />
+                  </>
+                ) : (
+                  <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-6">
+                    <div className="glass-panel rounded-3xl p-8 sm:p-12 border border-purple-500/30 bg-purple-950/20 shadow-2xl space-y-5 animate-in fade-in duration-300">
+                      <div className="w-16 h-16 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                        <Lock className="w-8 h-8 text-cyan-400" />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="text-[11px] font-mono tracking-widest text-cyan-400 uppercase font-semibold">
+                          Owner Protected Portal
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
+                          Access Restricted
+                        </h2>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                        The Client Messages & Inquiries Hub contains confidential inquiries and is exclusively restricted to the site owner (<span className="text-cyan-300 font-mono font-semibold">malikahtashamjaved@gmail.com</span>).
+                      </p>
+
+                      <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
+                        <button
+                          onClick={() => setAuthModalOpen(true)}
+                          className="px-6 py-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        >
+                          Sign In with Owner Credentials
+                        </button>
+                        <button
+                          onClick={() => handleNavigate('home')}
+                          className="px-5 py-3 rounded-xl text-xs font-semibold text-slate-300 hover:text-white glass-panel hover:bg-white/10 transition-colors cursor-pointer"
+                        >
+                          Return to Home
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -226,6 +359,7 @@ export default function App() {
             <Achievements />
             <Testimonials />
             <Contact initialService={selectedServiceForHire} />
+            {isAdmin && <Inbox />}
           </div>
         )}
       </div>
@@ -250,6 +384,14 @@ export default function App() {
         onNavigateHome={() => handleNavigate('home')}
         onHireClick={() => handleOpenHire()}
         onViewProjects={() => handleNavigate('projects')}
+      />
+
+      {/* Login / Authentication Gateway */}
+      <AuthGateway
+        isOpen={authModalOpen}
+        onSuccess={handleAuthSuccess}
+        onCancel={() => setAuthModalOpen(false)}
+        isInitialGate={!authSession.isAuthenticated}
       />
     </div>
   );

@@ -1,18 +1,28 @@
 -- =========================================================
--- SUPABASE DATABASE SCHEMA FOR AHTASHAM JAVED PORTFOLIO
+-- SUPABASE DATABASE SCHEMA WITH INBOX & CLIENT REPLIES
 -- Project: https://xordfjujwtnadwizjkpv.supabase.co
 -- =========================================================
 
--- 1. Create table for Contact Form inquiries
+-- 1. Create or update table for Contact Form inquiries & replies
 create table if not exists public.contact_inquiries (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   email text not null,
+  phone text,
   service text default 'Web Development',
   budget text default '$1,000 - $3,000',
   message text not null,
+  reply_message text,
+  reply_status text default 'pending', -- 'pending' | 'replied'
+  replied_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- If table already existed, add the reply columns if they don't exist:
+alter table public.contact_inquiries add column if not exists phone text;
+alter table public.contact_inquiries add column if not exists reply_message text;
+alter table public.contact_inquiries add column if not exists reply_status text default 'pending';
+alter table public.contact_inquiries add column if not exists replied_at timestamp with time zone;
 
 -- Enable Row Level Security (RLS)
 alter table public.contact_inquiries enable row level security;
@@ -20,20 +30,29 @@ alter table public.contact_inquiries enable row level security;
 -- Drop existing policies if any to prevent duplication errors
 drop policy if exists "Allow public submissions for contact_inquiries" on public.contact_inquiries;
 drop policy if exists "Allow reading contact_inquiries" on public.contact_inquiries;
+drop policy if exists "Allow updating replies for contact_inquiries" on public.contact_inquiries;
 
--- Allow anonymous visitors from your portfolio website to submit messages
+-- Policy 1: Allow any visitor on your portfolio to submit an inquiry
 create policy "Allow public submissions for contact_inquiries"
   on public.contact_inquiries
   for insert
   to anon, authenticated
   with check (true);
 
--- Allow you (authenticated user / project owner) to view all inquiries
+-- Policy 2: Allow reading inquiries on your portfolio's Inbox page
 create policy "Allow reading contact_inquiries"
   on public.contact_inquiries
   for select
-  to authenticated
+  to anon, authenticated
   using (true);
+
+-- Policy 3: Allow saving and updating your reply to the client
+create policy "Allow updating replies for contact_inquiries"
+  on public.contact_inquiries
+  for update
+  to anon, authenticated
+  using (true)
+  with check (true);
 
 
 -- 2. Create table for "Hire Me" proposals
@@ -45,29 +64,36 @@ create table if not exists public.hire_requests (
   timeline text default '2 - 4 Weeks',
   budget text default '$3,000 - $5,000',
   details text,
+  reply_message text,
+  reply_status text default 'pending',
+  replied_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Enable Row Level Security (RLS)
 alter table public.hire_requests enable row level security;
 
--- Drop existing policies if any to prevent duplication errors
 drop policy if exists "Allow public submissions for hire_requests" on public.hire_requests;
 drop policy if exists "Allow reading hire_requests" on public.hire_requests;
+drop policy if exists "Allow updating hire_requests" on public.hire_requests;
 
--- Allow anonymous website visitors to submit hire requests
 create policy "Allow public submissions for hire_requests"
   on public.hire_requests
   for insert
   to anon, authenticated
   with check (true);
 
--- Allow you to view all hire requests
 create policy "Allow reading hire_requests"
   on public.hire_requests
   for select
-  to authenticated
+  to anon, authenticated
   using (true);
+
+create policy "Allow updating hire_requests"
+  on public.hire_requests
+  for update
+  to anon, authenticated
+  using (true)
+  with check (true);
 
 
 -- 3. (Optional) Starter todos table
@@ -79,7 +105,6 @@ create table if not exists public.todos (
 );
 
 alter table public.todos enable row level security;
-
 drop policy if exists "Allow all for todos" on public.todos;
 create policy "Allow all for todos"
   on public.todos
@@ -88,9 +113,7 @@ create policy "Allow all for todos"
   using (true)
   with check (true);
 
--- =========================================================
--- Verification query: Run this to confirm tables exist
--- =========================================================
+-- Verification: Check existing tables and columns
 select table_name 
 from information_schema.tables 
 where table_schema = 'public' 

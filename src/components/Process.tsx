@@ -102,10 +102,10 @@ export const Process: React.FC = () => {
                   playClickSound();
                   setActiveStep(idx);
                 }}
-                className={`glass-panel rounded-3xl p-6 sm:p-7 border transition-all duration-300 flex flex-col justify-between cursor-pointer group ${
+                className={`glass-panel hover-card-3d rounded-3xl p-6 sm:p-7 border transition-all duration-300 flex flex-col justify-between cursor-pointer group ${
                   isCurrent
-                    ? 'border-cyan-400/50 bg-gradient-to-b from-purple-950/40 to-cyan-950/20 shadow-xl shadow-cyan-950/20 -translate-y-1'
-                    : 'border-white/10 dark:border-white/10 light:border-slate-200 hover:border-white/20'
+                    ? 'border-cyan-400/70 bg-gradient-to-b from-purple-950/50 to-cyan-950/30 shadow-xl shadow-cyan-950/40 -translate-y-1'
+                    : 'border-white/10 dark:border-white/10 light:border-slate-200 hover:border-cyan-400/50'
                 }`}
               >
                 <div className="space-y-5">

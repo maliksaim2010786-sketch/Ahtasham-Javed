@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowDown, ArrowUpRight, Github, MessageCircle, Box, Layers, UserCheck } from 'lucide-react';
 import { Hero3D } from './Hero3D';
 import { HolographicCard3D } from './HolographicCard3D';
-import { playClickSound } from '../utils/audio';
+import { playClickSound, playHoverSound } from '../utils/audio';
 import { PageId } from './Navbar';
 
 interface HeroProps {
@@ -74,6 +74,7 @@ export const Hero: React.FC<HeroProps> = ({ onHireClick, onNavigate }) => {
             {/* Action Buttons & Links */}
             <div className="pt-4 flex flex-wrap items-center gap-4">
               <button
+                onMouseEnter={() => playHoverSound()}
                 onClick={() => {
                   playClickSound();
                   if (onNavigate) {
@@ -83,18 +84,19 @@ export const Hero: React.FC<HeroProps> = ({ onHireClick, onNavigate }) => {
                     el?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.35)] transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.35)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <span>View Projects</span>
                 <ArrowDown className="w-4 h-4" />
               </button>
 
               <button
+                onMouseEnter={() => playHoverSound()}
                 onClick={() => {
                   playClickSound();
                   onHireClick();
                 }}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-slate-200 dark:text-slate-200 light:text-slate-800 glass-panel hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-100 rounded-xl transition-all active:scale-95 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-slate-200 dark:text-slate-200 light:text-slate-800 glass-panel hover:bg-white/15 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <span>Hire Me</span>
                 <ArrowUpRight className="w-4 h-4 text-cyan-400" />
@@ -104,8 +106,9 @@ export const Hero: React.FC<HeroProps> = ({ onHireClick, onNavigate }) => {
                 href="https://wa.me/923007118380?text=Hi%20Ahtasham,%20I%20saw%20your%20portfolio%20and%20would%20like%20to%20discuss%20a%20project"
                 target="_blank"
                 rel="noopener noreferrer"
+                onMouseEnter={() => playHoverSound()}
                 onClick={() => playClickSound()}
-                className="p-3.5 rounded-xl glass-panel text-slate-300 hover:text-emerald-400 transition-colors"
+                className="p-3.5 rounded-xl glass-panel text-slate-300 hover:text-emerald-400 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(52,211,153,0.35)] hover:scale-110 transition-all cursor-pointer"
                 title="Direct WhatsApp Chat (0300-7118380)"
               >
                 <MessageCircle className="w-4 h-4" />
@@ -115,8 +118,9 @@ export const Hero: React.FC<HeroProps> = ({ onHireClick, onNavigate }) => {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
+                onMouseEnter={() => playHoverSound()}
                 onClick={() => playClickSound()}
-                className="p-3.5 rounded-xl glass-panel text-slate-300 hover:text-white transition-colors"
+                className="p-3.5 rounded-xl glass-panel text-slate-300 hover:text-white hover:border-white/40 hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-110 transition-all cursor-pointer"
                 title="GitHub Profile"
               >
                 <Github className="w-4 h-4" />

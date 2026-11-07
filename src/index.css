@@ -205,3 +205,29 @@ html:not(.dark) .glow-rotating-ring > .glow-rotating-inner {
   background-clip: text;
   animation: shimmer-sweep 6s linear infinite;
 }
+
+/* Tactile 3D Hover & Glow Utilities */
+.hover-card-3d {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
+  will-change: transform, box-shadow;
+}
+
+.hover-card-3d:hover {
+  transform: translateY(-6px) scale(1.012);
+  box-shadow: 0 20px 40px -15px rgba(6, 182, 212, 0.3), 0 0 30px rgba(168, 85, 247, 0.25);
+  border-color: rgba(6, 182, 212, 0.55);
+}
+
+.hover-glow-button {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-glow-button:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.5), 0 0 15px rgba(6, 182, 212, 0.45);
+}
+
+.hover-glow-button:active {
+  transform: translateY(0px) scale(0.97);
+}
+

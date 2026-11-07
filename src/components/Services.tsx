@@ -131,8 +131,8 @@ export const Services: React.FC<ServicesProps> = ({ onSelectService }) => {
                   }}
                   className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex items-center justify-between ${
                     isSelected
-                      ? 'glass-panel border-cyan-500/50 bg-gradient-to-r from-purple-900/30 to-cyan-900/20 shadow-lg shadow-cyan-950/20 translate-x-2'
-                      : 'border-white/5 hover:border-white/20 hover:bg-white/[0.02]'
+                      ? 'glass-panel border-cyan-400/70 bg-gradient-to-r from-purple-900/40 to-cyan-900/30 shadow-lg shadow-cyan-950/40 translate-x-2'
+                      : 'border-white/10 hover:border-cyan-400/50 hover:bg-white/[0.06] hover:translate-x-2 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -154,7 +154,7 @@ export const Services: React.FC<ServicesProps> = ({ onSelectService }) => {
 
                   <ArrowRight
                     className={`w-4 h-4 transition-transform ${
-                      isSelected ? 'text-cyan-400 translate-x-1' : 'text-slate-600'
+                      isSelected ? 'text-cyan-400 translate-x-1.5' : 'text-slate-600 group-hover:text-cyan-400 group-hover:translate-x-1'
                     }`}
                   />
                 </div>
@@ -163,7 +163,7 @@ export const Services: React.FC<ServicesProps> = ({ onSelectService }) => {
           </div>
 
           {/* Right: Selected Service Deep Dive Card */}
-          <div className="lg:col-span-7 glass-panel rounded-3xl p-8 border border-white/10 dark:border-white/10 light:border-slate-200 space-y-6">
+          <div className="lg:col-span-7 glass-panel hover-card-3d rounded-3xl p-8 border border-white/10 dark:border-white/10 light:border-slate-200 space-y-6">
             {(() => {
               const active = services[selectedServiceIdx];
               const Icon = active.icon;

@@ -7,9 +7,10 @@ interface PaginationDockProps {
   currentPage: PageId;
   onNavigate: (page: PageId) => void;
   onHireClick: () => void;
+  isAdmin?: boolean;
 }
 
-const pageSequence: { id: PageId; label: string; number: number }[] = [
+const allPageSequence: { id: PageId; label: string; number: number; adminOnly?: boolean }[] = [
   { id: 'home', label: 'Home Overview', number: 1 },
   { id: 'about', label: 'About & Journey', number: 2 },
   { id: 'skills', label: 'Technical Arsenal', number: 3 },
@@ -18,13 +19,17 @@ const pageSequence: { id: PageId; label: string; number: number }[] = [
   { id: 'process', label: 'Work Methodology', number: 6 },
   { id: 'testimonials', label: 'Client Reviews', number: 7 },
   { id: 'contact', label: 'Start Project', number: 8 },
+  { id: 'inbox', label: 'Client Messages', number: 9, adminOnly: true },
 ];
 
 export const PaginationDock: React.FC<PaginationDockProps> = ({
   currentPage,
   onNavigate,
   onHireClick,
+  isAdmin = false,
 }) => {
+  const pageSequence = allPageSequence.filter((p) => !p.adminOnly || isAdmin);
+  const totalPages = pageSequence.length;
   const currentIndex = pageSequence.findIndex((p) => p.id === currentPage);
   const prevPage = currentIndex > 0 ? pageSequence[currentIndex - 1] : null;
   const nextPage = currentIndex < pageSequence.length - 1 ? pageSequence[currentIndex + 1] : null;
@@ -47,7 +52,7 @@ export const PaginationDock: React.FC<PaginationDockProps> = ({
           </button>
         ) : (
           <div className="hidden sm:block text-xs font-mono text-slate-500">
-            01 / 08 · Origin
+            01 / 0{totalPages} · Origin
           </div>
         )}
 

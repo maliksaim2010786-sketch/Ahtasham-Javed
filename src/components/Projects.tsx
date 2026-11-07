@@ -182,7 +182,7 @@ export const Projects: React.FC = () => {
             <div
               key={project.id}
               onMouseEnter={() => playHoverSound()}
-              className="glass-panel rounded-3xl overflow-hidden border border-white/10 dark:border-white/10 light:border-slate-200 hover:border-purple-500/40 transition-all duration-300 group flex flex-col justify-between"
+              className="glass-panel hover-card-3d rounded-3xl overflow-hidden border border-white/10 dark:border-white/10 light:border-slate-200 group flex flex-col justify-between cursor-pointer"
             >
               {/* Media Preview Container */}
               <div className="relative aspect-[16/10] overflow-hidden bg-slate-950">

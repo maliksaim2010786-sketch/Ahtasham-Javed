@@ -112,7 +112,7 @@ export const Testimonials: React.FC = () => {
           return (
             <div
               onMouseEnter={() => playHoverSound()}
-              className="glass-panel rounded-3xl p-8 sm:p-12 border border-white/10 dark:border-white/10 light:border-slate-200 relative overflow-hidden shadow-2xl transition-all duration-300"
+              className="glass-panel hover-card-3d rounded-3xl p-8 sm:p-12 border border-white/10 dark:border-white/10 light:border-slate-200 relative overflow-hidden shadow-2xl transition-all duration-300"
             >
               {/* Subtle neon gradient bar at top */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-400 to-blue-500" />

@@ -111,7 +111,7 @@ export const About: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div
             onMouseEnter={() => playHoverSound()}
-            className="glass-panel rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 hover:-translate-y-1 transition-transform"
+            className="glass-panel hover-card-3d rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 cursor-pointer"
           >
             <GlowIconBox size="sm">
               <Layers className="w-4 h-4 text-cyan-400" />
@@ -126,7 +126,7 @@ export const About: React.FC = () => {
 
           <div
             onMouseEnter={() => playHoverSound()}
-            className="glass-panel rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 hover:-translate-y-1 transition-transform"
+            className="glass-panel hover-card-3d rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 cursor-pointer"
           >
             <GlowIconBox size="sm">
               <Code2 className="w-4 h-4 text-purple-400" />
@@ -141,7 +141,7 @@ export const About: React.FC = () => {
 
           <div
             onMouseEnter={() => playHoverSound()}
-            className="glass-panel rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 hover:-translate-y-1 transition-transform"
+            className="glass-panel hover-card-3d rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 cursor-pointer"
           >
             <GlowIconBox size="sm">
               <Zap className="w-4 h-4 text-blue-400" />
@@ -156,7 +156,7 @@ export const About: React.FC = () => {
 
           <div
             onMouseEnter={() => playHoverSound()}
-            className="glass-panel rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 hover:-translate-y-1 transition-transform"
+            className="glass-panel hover-card-3d rounded-2xl p-6 space-y-3 border border-white/10 dark:border-white/10 light:border-slate-200 cursor-pointer"
           >
             <GlowIconBox size="sm">
               <Rocket className="w-4 h-4 text-emerald-400" />

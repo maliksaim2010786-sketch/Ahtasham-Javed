@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Menu, X, ArrowUpRight, LayoutGrid, Layers } from 'lucide-react';
-import { toggleSound, isSoundEnabled, playClickSound } from '../utils/audio';
+import { Volume2, VolumeX, Sun, Moon, Menu, X, ArrowUpRight, LayoutGrid, Layers, LogIn, LogOut, ShieldCheck } from 'lucide-react';
+import { toggleSound, isSoundEnabled, playClickSound, playHoverSound } from '../utils/audio';
 
-export type PageId = 'home' | 'about' | 'skills' | 'projects' | 'services' | 'process' | 'testimonials' | 'contact';
+export type PageId = 'home' | 'about' | 'skills' | 'projects' | 'services' | 'process' | 'testimonials' | 'contact' | 'inbox';
 
 interface NavbarProps {
   activePage: PageId;
@@ -13,6 +13,10 @@ interface NavbarProps {
   onOpenProfile?: () => void;
   isDark: boolean;
   toggleTheme: () => void;
+  isAdmin?: boolean;
+  userEmail?: string | null;
+  onOpenAuth?: () => void;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -24,6 +28,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenProfile,
   isDark,
   toggleTheme,
+  isAdmin = false,
+  userEmail = null,
+  onOpenAuth,
+  onLogout,
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -45,8 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const navLinks: { id: PageId; label: string }[] = [
-    { id: 'home', label: 'Home' },
+  const allNavLinks: { id: PageId; label: string; badge?: string; adminOnly?: boolean }[] = [
     { id: 'about', label: 'About' },
     { id: 'skills', label: 'Skills' },
     { id: 'projects', label: 'Projects' },
@@ -54,7 +61,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'process', label: 'Process' },
     { id: 'testimonials', label: 'Reviews' },
     { id: 'contact', label: 'Contact' },
+    { id: 'inbox', label: 'Messages', badge: 'Owner', adminOnly: true },
   ];
+
+  // Strictly hide Messages section if not logged in as Owner (malikahtashamjaved@gmail.com)
+  const navLinks = allNavLinks.filter((link) => !link.adminOnly || isAdmin);
 
   const handleNavClick = (id: PageId) => {
     playClickSound();
@@ -72,82 +83,66 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
         
-        {/* Zone 1: Developer Brand Logo with Ahtasham's photo & profile opener */}
-        <div className="flex items-center gap-3 shrink-0">
-          {/* Logo Avatar - Clicking opens the Profile & HD Photo Modal */}
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              if (onOpenProfile) {
-                onOpenProfile();
-              } else {
-                handleNavClick('home');
-              }
-            }}
-            className="relative group cursor-pointer focus:outline-none"
-            title="Click to open full profile & HD photo preview"
-            aria-label="Open profile modal"
-          >
-            <div className="glow-rotating-ring w-9 h-9 sm:w-10 sm:h-10 rounded-full p-[2px] shadow-[0_0_15px_rgba(6,182,212,0.45)] group-hover:scale-110 transition-transform duration-300">
+        {/* Zone 1: Developer Brand Logo - Clicking opens Home Page */}
+        <button
+          type="button"
+          onClick={() => {
+            playClickSound();
+            handleNavClick('home');
+          }}
+          className="flex items-center gap-3 shrink-0 cursor-pointer group text-left transition-transform hover:scale-[1.03] active:scale-95 focus:outline-none"
+          title="Click to go to Home Page"
+          aria-label="Home page logo"
+        >
+          {/* Logo Avatar with rotating neon ring */}
+          <div className="relative">
+            <div className="glow-rotating-ring w-9 h-9 sm:w-10 sm:h-10 rounded-full p-[2px] shadow-[0_0_15px_rgba(6,182,212,0.45)] group-hover:shadow-[0_0_22px_rgba(168,85,247,0.6)] transition-all duration-300">
               <div className="glow-rotating-inner w-full h-full rounded-full bg-slate-950 overflow-hidden flex items-center justify-center">
                 <img
                   src="/assets/aistudio/a7c15d4c-657d-49ff-8146-81cda0bb2807_e1ecb5b4.png"
                   alt="Ahtasham Javed"
-                  className="w-full h-full object-cover object-top scale-125 translate-y-0.5"
+                  className="w-full h-full object-cover object-top scale-125 translate-y-0.5 group-hover:scale-135 transition-transform duration-300"
                 />
               </div>
             </div>
             {/* Active online pulse dot */}
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black shadow-[0_0_6px_rgba(52,211,153,0.9)]" />
-          </button>
+          </div>
 
-          {/* Logo Brand Typography - Navigates Home / Opens Profile */}
-          <button
-            type="button"
-            onClick={() => {
-              playClickSound();
-              handleNavClick('home');
-            }}
-            className="flex flex-col text-left group cursor-pointer focus:outline-none"
-            title="Ahtasham Javed - Home"
-          >
+          {/* Logo Brand Typography */}
+          <div className="flex flex-col">
             <span className="font-display tracking-wider font-extrabold text-sm sm:text-base text-white dark:text-white light:text-slate-900 group-hover:text-shimmer transition-all leading-tight">
               AHTASHAM JAVED
             </span>
             <span className="text-[10px] font-mono tracking-widest text-cyan-400 font-semibold uppercase flex items-center gap-1.5">
               <span>3D Architect</span>
               <span className="text-slate-600">·</span>
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  playClickSound();
-                  onOpenProfile?.();
-                }}
-                className="text-purple-400 hover:text-purple-300 cursor-pointer underline underline-offset-2"
-                title="Open Profile Modal"
-              >
-                Profile
-              </span>
+              <span className="text-purple-400 font-bold group-hover:underline">Home</span>
             </span>
-          </button>
-        </div>
+          </div>
+        </button>
 
-        {/* Zone 2: Navigation Links (Clean single-line with active indicator) */}
+        {/* Zone 2: Navigation Links (Clean single-line with active indicator & enhanced hover) */}
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs xl:text-sm font-medium text-slate-300 dark:text-slate-300 light:text-slate-600">
           {navLinks.map((link) => {
             const isActive = activePage === link.id;
             return (
               <button
                 key={link.id}
+                onMouseEnter={() => playHoverSound()}
                 onClick={() => handleNavClick(link.id)}
                 className={`px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 font-medium cursor-pointer ${
                   isActive
-                    ? 'text-cyan-300 bg-white/10 dark:bg-white/10 light:bg-slate-200 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-semibold'
-                    : 'text-slate-300 dark:text-slate-300 light:text-slate-600 hover:text-white dark:hover:text-white light:hover:text-slate-900 hover:bg-white/5'
+                    ? 'text-cyan-300 bg-white/10 dark:bg-white/10 light:bg-slate-200 shadow-[0_0_12px_rgba(6,182,212,0.35)] font-semibold border border-cyan-500/30'
+                    : 'text-slate-300 dark:text-slate-300 light:text-slate-600 hover:text-white dark:hover:text-white light:hover:text-slate-900 hover:bg-white/10 hover:shadow-[0_0_12px_rgba(168,85,247,0.25)] hover:-translate-y-0.5'
                 }`}
               >
-                {link.label}
+                <span>{link.label}</span>
+                {link.badge && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                    {link.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -201,6 +196,45 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-purple-600" />}
           </button>
 
+          {/* Auth Status & Owner Login / Logout */}
+          {isAdmin ? (
+            <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-white/10">
+              <div 
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-purple-950/60 text-cyan-300 border border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.3)]"
+                title="Signed in as Owner: malikahtashamjaved@gmail.com"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden xl:inline font-semibold">Owner</span>
+              </div>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  if (onLogout) onLogout();
+                }}
+                className="p-1.5 text-xs text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                title="Sign out of owner account"
+                aria-label="Sign out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="hidden sm:flex items-center pl-1 border-l border-white/10">
+              <button
+                onClick={() => {
+                  playClickSound();
+                  if (onOpenAuth) onOpenAuth();
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 transition-all cursor-pointer shadow-sm hover:border-cyan-400/50"
+                title="Sign in with owner credentials to unlock client messages"
+              >
+                <LogIn className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden xl:inline">Owner Login</span>
+                <span className="xl:hidden">Login</span>
+              </button>
+            </div>
+          )}
+
           {/* Primary CTA */}
           <button
             onClick={() => {
@@ -249,7 +283,39 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </div>
 
-          <div className="pt-2 flex items-center justify-between border-t border-white/10">
+          <div className="pt-3 flex flex-col gap-2 border-t border-white/10">
+            {/* Mobile Auth Button */}
+            {isAdmin ? (
+              <div className="flex items-center justify-between py-1 text-xs">
+                <span className="text-cyan-300 font-mono flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Signed in as Owner</span>
+                </span>
+                <button
+                  onClick={() => {
+                    playClickSound();
+                    if (onLogout) onLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="px-2.5 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-mono"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  playClickSound();
+                  if (onOpenAuth) onOpenAuth();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-2 px-3 rounded-lg bg-cyan-950/50 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-medium flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Owner Login (Unlock Messages)</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 playClickSound();

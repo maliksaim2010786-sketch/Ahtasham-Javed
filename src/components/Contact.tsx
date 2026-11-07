@@ -67,6 +67,7 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
           service: formData.service,
           budget: formData.budget,
           message: formData.message,
+          reply_status: 'pending',
           created_at: new Date().toISOString(),
         },
       ]);

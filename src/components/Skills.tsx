@@ -178,7 +178,7 @@ export const Skills: React.FC = () => {
                   playClickSound();
                   setSelectedSkill(skill);
                 }}
-                className="glass-panel rounded-2xl p-6 border border-white/10 dark:border-white/10 light:border-slate-200 hover:border-cyan-500/40 transition-all duration-300 hover:-translate-y-1 cursor-pointer group flex flex-col justify-between"
+                className="glass-panel hover-card-3d rounded-2xl p-6 border border-white/10 dark:border-white/10 light:border-slate-200 cursor-pointer group flex flex-col justify-between"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
