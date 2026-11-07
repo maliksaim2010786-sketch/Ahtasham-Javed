@@ -43,23 +43,39 @@ export const HireModal: React.FC<HireModalProps> = ({
     e.preventDefault();
     playClickSound();
     setIsSubmitting(true);
+
+    const newOrderData = {
+      id: 'ord-' + Math.floor(1000 + Math.random() * 9000),
+      name,
+      email,
+      service: selectedService,
+      timeline,
+      budget,
+      details,
+      order_status: 'new' as const,
+      reply_status: 'pending' as const,
+      created_at: new Date().toISOString(),
+    };
+
+    // 1. Save to Supabase
     try {
-      await supabase.from('hire_requests').insert([
-        {
-          name,
-          email,
-          service: selectedService,
-          timeline,
-          budget,
-          details,
-          order_status: 'new',
-          reply_status: 'pending',
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      await supabase.from('hire_requests').insert([newOrderData]);
     } catch (err) {
       console.info('Supabase hire inquiry notice:', err);
     }
+
+    // 2. Cache in localStorage so Owner Orders dashboard displays it instantly
+    try {
+      const LOCAL_KEY = 'ahtasham_client_orders_cache';
+      const existing = localStorage.getItem(LOCAL_KEY);
+      const ordersList = existing ? JSON.parse(existing) : [];
+      const updated = [newOrderData, ...ordersList];
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
+    } catch {}
+
+    // 3. Dispatch live event
+    window.dispatchEvent(new CustomEvent('new-client-order', { detail: newOrderData }));
+
     setIsSubmitting(false);
     setIsSuccess(true);
     playSuccessSound();

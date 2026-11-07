@@ -58,6 +58,19 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
     playClickSound();
     setIsSubmitting(true);
 
+    const newInquiryOrder = {
+      id: 'ord-' + Math.floor(1000 + Math.random() * 9000),
+      name: formData.name,
+      email: formData.email,
+      service: formData.service,
+      budget: formData.budget,
+      timeline: '2 - 4 Weeks',
+      details: formData.message,
+      order_status: 'new' as const,
+      reply_status: 'pending' as const,
+      created_at: new Date().toISOString(),
+    };
+
     try {
       // Store inquiry in Supabase database
       await supabase.from('contact_inquiries').insert([
@@ -71,9 +84,21 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
           created_at: new Date().toISOString(),
         },
       ]);
+      // Also store in hire_requests so it's in orders database
+      await supabase.from('hire_requests').insert([newInquiryOrder]);
     } catch (err) {
       console.info('Supabase inquiry record notice:', err);
     }
+
+    // Cache locally for instant appearance in Owner Orders
+    try {
+      const LOCAL_KEY = 'ahtasham_client_orders_cache';
+      const existing = localStorage.getItem(LOCAL_KEY);
+      const list = existing ? JSON.parse(existing) : [];
+      localStorage.setItem(LOCAL_KEY, JSON.stringify([newInquiryOrder, ...list]));
+    } catch {}
+
+    window.dispatchEvent(new CustomEvent('new-client-order', { detail: newInquiryOrder }));
 
     setIsSubmitting(false);
     setSubmitted(true);

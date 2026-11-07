@@ -15,7 +15,7 @@ import { Process } from './components/Process';
 import { Achievements } from './components/Achievements';
 import { Testimonials } from './components/Testimonials';
 import { Contact } from './components/Contact';
-import { Inbox } from './components/Inbox';
+import { OwnerOrders } from './components/OwnerOrders';
 import { Footer } from './components/Footer';
 import { CustomCursor } from './components/CustomCursor';
 import { HireModal } from './components/HireModal';
@@ -77,6 +77,13 @@ export default function App() {
       // ignore
     }
     setAuthModalOpen(false);
+
+    // If owner logs in, navigate directly to Client Orders section
+    if (session.role === 'admin' && session.email.trim().toLowerCase() === 'malikahtashamjaved@gmail.com') {
+      setActivePage('inbox');
+      window.location.hash = 'inbox';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleLogout = () => {
@@ -293,7 +300,7 @@ export default function App() {
               <div className="pt-4">
                 {isAdmin ? (
                   <>
-                    <Inbox />
+                    <OwnerOrders />
                     <PaginationDock
                       currentPage="inbox"
                       onNavigate={handleNavigate}
@@ -359,7 +366,7 @@ export default function App() {
             <Achievements />
             <Testimonials />
             <Contact initialService={selectedServiceForHire} />
-            {isAdmin && <Inbox />}
+            {isAdmin && <OwnerOrders />}
           </div>
         )}
       </div>
