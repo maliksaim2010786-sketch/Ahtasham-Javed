@@ -113,8 +113,38 @@ create policy "Allow all for todos"
   using (true)
   with check (true);
 
--- Verification: Check existing tables and columns
+-- 3. Table for Real Client Reviews & Testimonials
+create table if not exists public.client_reviews (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  role text,
+  company text,
+  project_name text,
+  rating integer default 5 check (rating >= 1 and rating <= 5),
+  review text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.client_reviews enable row level security;
+
+drop policy if exists "Allow public submissions for client_reviews" on public.client_reviews;
+drop policy if exists "Allow reading client_reviews" on public.client_reviews;
+
+create policy "Allow public submissions for client_reviews"
+  on public.client_reviews
+  for insert
+  to anon, authenticated
+  with check (true);
+
+create policy "Allow reading client_reviews"
+  on public.client_reviews
+  for select
+  to anon, authenticated
+  using (true);
+
+
+-- 4. Verification: Check existing tables
 select table_name 
 from information_schema.tables 
 where table_schema = 'public' 
-and table_name in ('contact_inquiries', 'hire_requests', 'todos');
+and table_name in ('contact_inquiries', 'hire_requests', 'client_reviews');
