@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Clock, CheckCircle2, Send, RefreshCw, Mail, 
   MessageCircle, Search, Filter, Sparkles, Copy, Check, 
-  PlusCircle, Briefcase, DollarSign, Calendar, ArrowUpRight, 
+  Briefcase, DollarSign, Calendar, ArrowUpRight, 
   ShieldCheck, AlertCircle, Trash2
 } from 'lucide-react';
 import { supabase } from '../utils/supabase';
@@ -26,37 +26,19 @@ export interface ClientOrder {
 
 const LOCAL_STORAGE_ORDERS_KEY = 'ahtasham_client_orders_cache';
 
-// Starter orders so the section is never empty upon first look
-const starterOrders: ClientOrder[] = [
-  {
-    id: 'ord-8491',
-    name: 'Elena Rostova',
-    email: 'elena@primedrive-luxury.com',
-    phone: '+44 7700 900123',
-    service: 'Full-Stack Web Development',
-    budget: '$3,000 - $5,000',
-    timeline: '2 - 4 Weeks',
-    details: 'Need a custom vehicle reservation engine with real-time fleet availability, deposit payments, and interactive 3D car exterior preview.',
-    order_status: 'new',
-    reply_status: 'pending',
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: 'ord-8492',
-    name: 'Marcus Vance',
-    email: 'm.vance@stratech-ai.io',
-    phone: '+1 415 555 2671',
-    service: '3D Three.js Web Experience',
-    budget: '$5,000+',
-    timeline: 'Urgent (< 2 Weeks)',
-    details: 'We need an interactive Three.js 3D globe and telemetry pipeline visualizer for our enterprise cloud platform before Series A demo day.',
-    order_status: 'in_progress',
-    reply_message: 'Hi Marcus! Project initiated. Initial 3D wireframe shaders and geometry systems are drafted and deployed on staging.',
-    reply_status: 'replied',
-    replied_at: new Date(Date.now() - 3600000 * 6).toISOString(),
-    created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-  },
-];
+// Helper to filter out any fake/mock/demo orders
+export const isDummyOrder = (o: { id?: string; name?: string; email?: string } | null | undefined): boolean => {
+  if (!o) return true;
+  const name = (o.name || '').toLowerCase();
+  const email = (o.email || '').toLowerCase();
+  const id = (o.id || '').toLowerCase();
+
+  if (id === 'ord-8491' || id === 'ord-8492' || id === 'ord-101' || id === 'ord-102') return true;
+  if (name.includes('elena rostova') || name.includes('marcus vance')) return true;
+  if (email.includes('primedrive-luxury') || email.includes('stratech-ai.io')) return true;
+  if (name.includes('test client') || name.includes('sample client')) return true;
+  return false;
+};
 
 export const OwnerOrders: React.FC = () => {
   const [orders, setOrders] = useState<ClientOrder[]>([]);
@@ -67,19 +49,21 @@ export const OwnerOrders: React.FC = () => {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
-  // Load orders from Supabase + Local Storage cache
+  // Load orders from Supabase + Local Storage cache (ONLY real client orders)
   const loadOrders = async () => {
     setLoading(true);
 
     let combined: ClientOrder[] = [];
 
-    // 1. Read from LocalStorage cache first (ensures instant frontend appearance)
+    // 1. Read from LocalStorage cache first and purge any legacy fake/dummy orders
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_ORDERS_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed)) {
-          combined = parsed;
+          combined = parsed.filter((o: ClientOrder) => !isDummyOrder(o));
+          // Save sanitized list back to cache
+          localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(combined));
         }
       }
     } catch {
@@ -94,26 +78,23 @@ export const OwnerOrders: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        const dbOrders = data as ClientOrder[];
+        const dbOrders = (data as ClientOrder[]).filter((o) => !isDummyOrder(o));
         
         // Merge without duplicating IDs
         const existingIds = new Set(dbOrders.map((o) => o.id));
         const nonDuplicateLocal = combined.filter((o) => !existingIds.has(o.id));
         combined = [...dbOrders, ...nonDuplicateLocal];
+
+        // Update local cache
+        try {
+          localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(combined));
+        } catch {}
       }
     } catch (err) {
       console.info('Supabase orders fetch notice:', err);
     }
 
-    // If completely empty, use starter orders
-    if (combined.length === 0) {
-      combined = starterOrders;
-      try {
-        localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(starterOrders));
-      } catch {}
-    }
-
-    // Sort newest first
+    // Sort newest first - if empty, keep it empty (ZERO fake orders)
     combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setOrders(combined);
     setLoading(false);
@@ -125,11 +106,15 @@ export const OwnerOrders: React.FC = () => {
     // Listen for live client order events dispatched by HireModal or ContactForm
     const handleNewOrderEvent = (e: Event) => {
       const customEvent = e as CustomEvent<ClientOrder>;
-      if (customEvent.detail) {
+      if (customEvent.detail && !isDummyOrder(customEvent.detail)) {
         setOrders((prev) => {
           const exists = prev.some((o) => o.id === customEvent.detail.id);
           if (exists) return prev;
-          return [customEvent.detail, ...prev];
+          const updated = [customEvent.detail, ...prev];
+          try {
+            localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updated));
+          } catch {}
+          return updated;
         });
         playSuccessSound();
       }
@@ -239,46 +224,27 @@ export const OwnerOrders: React.FC = () => {
     window.open(`mailto:${order.email}?subject=${subject}&body=${body}`, '_blank');
   };
 
-  // Simulate an instant new test order right on the screen
-  const handleCreateTestOrder = async () => {
+  // Delete an order permanently
+  const handleDeleteOrder = async (orderId: string) => {
     playClickSound();
-    const demoClients = [
-      { name: 'Zainab Qureshi', email: 'zainab@fintech-dubai.ae', service: 'Full-Stack Web Development', budget: '$5,000+', timeline: '2 - 4 Weeks' },
-      { name: 'Alexander Wright', email: 'alex@nexustech.co.uk', service: '3D Three.js Web Experience', budget: '$3,000 - $5,000', timeline: 'Urgent (< 2 Weeks)' },
-      { name: 'Chloe Laurent', email: 'chloe@atelier-luxury.fr', service: 'E-commerce & Booking Platform', budget: '$3,000 - $5,000', timeline: '1 - 2 Months' },
-    ];
-    const pick = demoClients[Math.floor(Math.random() * demoClients.length)];
+    if (!window.confirm('Are you sure you want to delete this client order?')) return;
+    setUpdatingId(orderId);
 
-    const newOrder: ClientOrder = {
-      id: 'ord-' + Math.floor(1000 + Math.random() * 9000),
-      name: pick.name,
-      email: pick.email,
-      phone: '+92 300 7118380',
-      service: pick.service,
-      budget: pick.budget,
-      timeline: pick.timeline,
-      details: `We need an agency-grade ${pick.service} with smooth animations, high conversion rate, and sub-120ms latency. Ready to start immediately.`,
-      order_status: 'new',
-      reply_status: 'pending',
-      created_at: new Date().toISOString(),
-    };
-
-    // Save to Supabase
     try {
-      await supabase.from('hire_requests').insert([newOrder]);
-    } catch {
-      // ignore
+      await supabase.from('hire_requests').delete().eq('id', orderId);
+    } catch (err) {
+      console.info('Supabase delete order notice:', err);
     }
 
-    // Save to LocalStorage cache
     setOrders((prev) => {
-      const updated = [newOrder, ...prev];
+      const updated = prev.filter((o) => o.id !== orderId);
       try {
         localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
 
+    setUpdatingId(null);
     playSuccessSound();
   };
 
@@ -338,25 +304,15 @@ export const OwnerOrders: React.FC = () => {
           {/* Quick Header Actions */}
           <div className="flex items-center gap-3 shrink-0 flex-wrap">
             <button
-              onClick={handleCreateTestOrder}
-              onMouseEnter={() => playHoverSound()}
-              className="px-4 py-2.5 rounded-xl text-xs font-mono font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95"
-              title="Add a simulated client order to test live display"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>+ Test Client Order</span>
-            </button>
-
-            <button
               onClick={() => {
                 playClickSound();
                 loadOrders();
               }}
               disabled={loading}
-              className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm hover:scale-105 active:scale-95"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
+              <span>Refresh Orders</span>
             </button>
           </div>
         </div>
@@ -447,17 +403,17 @@ export const OwnerOrders: React.FC = () => {
         {/* Orders Feed */}
         {filteredOrders.length === 0 ? (
           <div className="glass-panel rounded-3xl p-14 text-center space-y-4 border border-white/10">
-            <ShoppingBag className="w-14 h-14 text-slate-500 mx-auto" />
-            <h3 className="text-xl font-bold text-white">No Client Orders Found in this view</h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
-              Any order submitted on your portfolio's "Hire Me" modal or service selector will immediately appear here.
+            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto text-cyan-400">
+              <ShoppingBag className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-white font-display">No Client Orders Yet</h3>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+              Jab koi real client website par <strong className="text-cyan-300">"Hire Me"</strong> button se ya contact form se order submit karega, wo yahan real-time live show hoga.
             </p>
-            <button
-              onClick={handleCreateTestOrder}
-              className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 transition-all hover:scale-105 cursor-pointer shadow-md"
-            >
-              Simulate Test Order Now
-            </button>
+            <div className="pt-2 flex items-center justify-center gap-2 text-xs font-mono text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Real-Time Supabase Sync Active</span>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
@@ -682,6 +638,15 @@ export const OwnerOrders: React.FC = () => {
                         >
                           <Mail className="w-3.5 h-3.5 text-cyan-400" />
                           <span>Email Proposal</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteOrder(order.id)}
+                          disabled={updatingId === order.id}
+                          className="p-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                          title="Delete this order"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>

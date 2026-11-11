@@ -330,7 +330,7 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Marcus Vance"
+                      placeholder="e.g. David Miller"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white text-sm focus:border-cyan-400 focus:outline-none transition-colors"

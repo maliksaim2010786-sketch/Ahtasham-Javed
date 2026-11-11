@@ -196,15 +196,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-purple-600" />}
           </button>
 
-          {/* Auth Status & Owner Login / Logout */}
+          {/* Auth Status & Admin Login / Logout */}
           {isAdmin ? (
             <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-white/10">
               <div 
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-purple-950/60 text-cyan-300 border border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.3)]"
-                title="Signed in as Owner: malikahtashamjaved@gmail.com"
+                title="Signed in as Admin"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="hidden xl:inline font-semibold">Owner</span>
+                <span className="hidden xl:inline font-semibold">Admin</span>
               </div>
               <button
                 onClick={() => {
@@ -212,7 +212,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (onLogout) onLogout();
                 }}
                 className="p-1.5 text-xs text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
-                title="Sign out of owner account"
+                title="Sign out of admin account"
                 aria-label="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -226,11 +226,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   if (onOpenAuth) onOpenAuth();
                 }}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 transition-all cursor-pointer shadow-sm hover:border-cyan-400/50"
-                title="Sign in with owner credentials to unlock client messages"
+                title="Enter admin password to unlock client orders"
               >
                 <LogIn className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="hidden xl:inline">Owner Login</span>
-                <span className="xl:hidden">Login</span>
+                <span className="hidden xl:inline">Admin Login</span>
+                <span className="xl:hidden">Admin</span>
               </button>
             </div>
           )}
@@ -289,7 +289,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex items-center justify-between py-1 text-xs">
                 <span className="text-cyan-300 font-mono flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Signed in as Owner</span>
+                  <span>Signed in as Admin</span>
                 </span>
                 <button
                   onClick={() => {
@@ -312,7 +312,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="w-full py-2 px-3 rounded-lg bg-cyan-950/50 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-medium flex items-center justify-center gap-2"
               >
                 <LogIn className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Owner Login (Unlock Messages)</span>
+                <span>Admin Login (Unlock Orders)</span>
               </button>
             )}
 

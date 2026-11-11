@@ -32,10 +32,16 @@ export default function App() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedServiceForHire, setSelectedServiceForHire] = useState('Full-Stack Web Development');
 
-  // Auth Session State (Remembered in browser)
+  // Auth Session State: Session-only (never permanently persisted in localStorage)
+  // When user closes the browser/tab and reopens, admin password is required again!
   const [authSession, setAuthSession] = useState<AuthSession>(() => {
+    // Clear any legacy persistent session from localStorage
     try {
-      const stored = localStorage.getItem('ahtasham_portfolio_auth_session');
+      localStorage.removeItem('ahtasham_portfolio_auth_session');
+    } catch {}
+
+    try {
+      const stored = sessionStorage.getItem('ahtasham_portfolio_session');
       if (stored) {
         return JSON.parse(stored);
       }
@@ -49,10 +55,10 @@ export default function App() {
     };
   });
 
-  // Website open hone se pehle login / signin page aana chahiye
+  // Website open hone par ya band karke dobara kholne par login gateway prompt hamesha aayega
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(() => {
     try {
-      const stored = localStorage.getItem('ahtasham_portfolio_auth_session');
+      const stored = sessionStorage.getItem('ahtasham_portfolio_session');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.isAuthenticated) return false;
@@ -63,23 +69,22 @@ export default function App() {
     return true; // Show initial login gate
   });
 
-  // Strict check: Only malikahtashamjaved@gmail.com with admin role has owner privileges
+  // Admin privileges unlocked via Admin Password (webstudio5911)
   const isAdmin = 
     authSession.isAuthenticated && 
-    authSession.email.trim().toLowerCase() === 'malikahtashamjaved@gmail.com' && 
     authSession.role === 'admin';
 
   const handleAuthSuccess = (session: AuthSession) => {
     setAuthSession(session);
     try {
-      localStorage.setItem('ahtasham_portfolio_auth_session', JSON.stringify(session));
+      sessionStorage.setItem('ahtasham_portfolio_session', JSON.stringify(session));
     } catch {
       // ignore
     }
     setAuthModalOpen(false);
 
-    // If owner logs in, navigate directly to Client Orders section
-    if (session.role === 'admin' && session.email.trim().toLowerCase() === 'malikahtashamjaved@gmail.com') {
+    // If admin logs in, navigate directly to Client Orders section
+    if (session.role === 'admin') {
       setActivePage('inbox');
       window.location.hash = 'inbox';
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -94,6 +99,7 @@ export default function App() {
     };
     setAuthSession(guestSession);
     try {
+      sessionStorage.removeItem('ahtasham_portfolio_session');
       localStorage.removeItem('ahtasham_portfolio_auth_session');
     } catch {
       // ignore
@@ -333,7 +339,7 @@ export default function App() {
                           onClick={() => setAuthModalOpen(true)}
                           className="px-6 py-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
                         >
-                          Sign In with Owner Credentials
+                          Enter Admin Password
                         </button>
                         <button
                           onClick={() => handleNavigate('home')}

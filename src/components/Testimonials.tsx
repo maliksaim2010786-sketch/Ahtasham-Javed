@@ -357,7 +357,7 @@ export const Testimonials: React.FC = () => {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Marcus Vance"
+                        placeholder="e.g. Alex Henderson"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/15 text-white text-xs sm:text-sm focus:border-cyan-400 focus:outline-none transition-colors"

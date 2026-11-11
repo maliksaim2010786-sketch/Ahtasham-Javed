@@ -3,10 +3,11 @@ import {
   ShoppingBag, Inbox as InboxIcon, MessageSquare, Clock, CheckCircle2, 
   Send, RefreshCw, Mail, MessageCircle, Phone, Search, 
   Filter, Sparkles, Copy, Check, Database, ExternalLink, AlertCircle,
-  Briefcase, DollarSign, Calendar, PlusCircle, ArrowUpRight
+  Briefcase, DollarSign, Calendar, Trash2, ArrowUpRight
 } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { playClickSound, playSuccessSound, playHoverSound } from '../utils/audio';
+import { isDummyOrder } from './OwnerOrders';
 
 export interface OrderRecord {
   id: string;
@@ -37,50 +38,6 @@ export interface InquiryRecord {
   created_at: string;
 }
 
-// Starter fallback records in case remote database is waiting for first live order
-const fallbackOrders: OrderRecord[] = [
-  {
-    id: 'ord-101',
-    name: 'Elena Rostova',
-    email: 'elena@primedrive-luxury.com',
-    service: 'Full-Stack Web Development',
-    timeline: '2 - 4 Weeks',
-    budget: '$3,000 - $5,000',
-    details: 'We want to scale our luxury fleet platform with custom 3D vehicle inspection views, online reservation booking with deposit payments, and sub-120ms animation performance.',
-    order_status: 'new',
-    reply_status: 'pending',
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: 'ord-102',
-    name: 'Marcus Vance',
-    email: 'm.vance@stratech-ai.io',
-    service: '3D Three.js Web Experience',
-    timeline: 'Urgent (< 2 Weeks)',
-    budget: '$5,000+',
-    details: 'Need an interactive Three.js 3D globe and data-pipeline visualizer for our enterprise SaaS dashboard before our Series A demo day.',
-    order_status: 'in_progress',
-    reply_message: 'Hi Marcus! Project initiated. Initial 3D wireframe and Three.js geometry shaders have been drafted and deployed to staging.',
-    reply_status: 'replied',
-    replied_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-  },
-];
-
-const fallbackInquiries: InquiryRecord[] = [
-  {
-    id: 'inq-201',
-    name: 'Sophia Laurent',
-    email: 'sophia@solstice-design.fr',
-    phone: '+33 6 12 34 56 78',
-    service: 'UI/UX Design & Spatial Systems',
-    budget: '$3,000 - $5,000',
-    message: 'We are expanding our Paris interior studio and need a modern portfolio redesign with smooth parallax scrolling and high-fidelity room views.',
-    reply_status: 'pending',
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-  },
-];
-
 export const Inbox: React.FC = () => {
   const [mainView, setMainView] = useState<'orders' | 'inquiries'>('orders');
   const [orders, setOrders] = useState<OrderRecord[]>([]);
@@ -92,7 +49,7 @@ export const Inbox: React.FC = () => {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
-  // Fetch client orders from Supabase table 'hire_requests'
+  // Fetch client orders from Supabase table 'hire_requests' (ONLY real client orders)
   const fetchOrdersAndInquiries = async () => {
     setLoading(true);
     playClickSound();
@@ -104,10 +61,10 @@ export const Inbox: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (ordersErr || !ordersData || ordersData.length === 0) {
-        setOrders(fallbackOrders);
+      if (!ordersErr && ordersData) {
+        setOrders((ordersData as OrderRecord[]).filter((o) => !isDummyOrder(o)));
       } else {
-        setOrders(ordersData as OrderRecord[]);
+        setOrders([]);
       }
 
       // 2. Fetch Contact Inquiries
@@ -116,14 +73,14 @@ export const Inbox: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (inqErr || !inqData || inqData.length === 0) {
-        setInquiries(fallbackInquiries);
-      } else {
+      if (!inqErr && inqData) {
         setInquiries(inqData as InquiryRecord[]);
+      } else {
+        setInquiries([]);
       }
     } catch {
-      setOrders(fallbackOrders);
-      setInquiries(fallbackInquiries);
+      setOrders([]);
+      setInquiries([]);
     } finally {
       setLoading(false);
     }
@@ -221,36 +178,20 @@ export const Inbox: React.FC = () => {
     window.open(`https://wa.me/923007118380?text=${text}`, '_blank');
   };
 
-  const handleSimulateNewOrder = async () => {
+  // Delete an order
+  const handleDeleteOrder = async (orderId: string) => {
     playClickSound();
-    const demoClientNames = ['Oliver Thorne', 'Zainab Qureshi', 'Alexander Pierce', 'Chloe Dupont'];
-    const demoServices = ['3D Three.js Web Experience', 'Full-Stack Web Development', 'E-commerce & Booking Platform'];
-    const demoBudgets = ['$3,000 - $5,000', '$5,000+', '$1,000 - $3,000'];
-    
-    const randomName = demoClientNames[Math.floor(Math.random() * demoClientNames.length)];
-    const randomService = demoServices[Math.floor(Math.random() * demoServices.length)];
-    const randomBudget = demoBudgets[Math.floor(Math.random() * demoBudgets.length)];
-    
-    const newSimulatedOrder: OrderRecord = {
-      id: 'ord-' + Math.floor(1000 + Math.random() * 9000),
-      name: randomName,
-      email: `${randomName.toLowerCase().replace(' ', '.')}@enterprise-client.io`,
-      service: randomService,
-      timeline: '2 - 4 Weeks',
-      budget: randomBudget,
-      details: `We need an agency-grade ${randomService} with interactive 3D capabilities and seamless performance for our corporate product launch.`,
-      order_status: 'new',
-      reply_status: 'pending',
-      created_at: new Date().toISOString(),
-    };
+    if (!window.confirm('Are you sure you want to delete this client order?')) return;
+    setUpdatingId(orderId);
 
     try {
-      await supabase.from('hire_requests').insert([newSimulatedOrder]);
-    } catch {
-      // optimistic update
+      await supabase.from('hire_requests').delete().eq('id', orderId);
+    } catch (err) {
+      console.info('Supabase delete order notice:', err);
     }
 
-    setOrders((prev) => [newSimulatedOrder, ...prev]);
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    setUpdatingId(null);
     playSuccessSound();
   };
 
@@ -310,19 +251,9 @@ export const Inbox: React.FC = () => {
           {/* Quick Header Actions */}
           <div className="flex items-center gap-3 shrink-0 flex-wrap">
             <button
-              onClick={handleSimulateNewOrder}
-              onMouseEnter={() => playHoverSound()}
-              className="px-3.5 py-2 rounded-xl text-xs font-mono font-medium text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-105"
-              title="Test new order arrival"
-            >
-              <PlusCircle className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Test Client Order</span>
-            </button>
-
-            <button
               onClick={fetchOrdersAndInquiries}
               disabled={loading}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/15 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/15 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm hover:scale-105 active:scale-95"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${loading ? 'animate-spin' : ''}`} />
               <span>Refresh Orders</span>
@@ -453,16 +384,14 @@ export const Inbox: React.FC = () => {
             {filteredOrders.length === 0 ? (
               <div className="glass-panel rounded-3xl p-12 text-center space-y-3 border border-white/10">
                 <ShoppingBag className="w-12 h-12 text-slate-500 mx-auto" />
-                <h3 className="text-lg font-bold text-white">No orders match this filter</h3>
+                <h3 className="text-lg font-bold text-white">No Client Orders Yet</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  When a client clicks "Hire Me" or books a service on your website, their order will immediately show up here.
+                  Jab koi client portfolio par "Hire Me" ya contact form submit karega, unka project order yahan real-time show hoga.
                 </p>
-                <button
-                  onClick={handleSimulateNewOrder}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 hover:bg-cyan-900/50 transition-colors"
-                >
-                  Create Sample Order
-                </button>
+                <div className="pt-1 flex items-center justify-center gap-2 text-xs font-mono text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Real-Time Supabase Sync Active</span>
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -687,6 +616,15 @@ export const Inbox: React.FC = () => {
                             >
                               <Mail className="w-3.5 h-3.5 text-cyan-400" />
                               <span>Email Proposal</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              disabled={updatingId === order.id}
+                              className="p-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                              title="Delete this order"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>

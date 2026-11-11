@@ -152,7 +152,7 @@ export const HireModal: React.FC<HireModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Elena Rostova"
+                  placeholder="e.g. Sarah Jenkins"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-cyan-400 focus:outline-none"
