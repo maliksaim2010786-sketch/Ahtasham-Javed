@@ -3,7 +3,7 @@ import {
   ShoppingBag, Clock, CheckCircle2, Send, RefreshCw, Mail, 
   MessageCircle, Search, Filter, Sparkles, Copy, Check, 
   Briefcase, DollarSign, Calendar, ArrowUpRight, 
-  ShieldCheck, AlertCircle, Trash2
+  ShieldCheck, AlertCircle, Trash2, X
 } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { playClickSound, playSuccessSound, playHoverSound } from '../utils/audio';
@@ -48,6 +48,8 @@ export const OwnerOrders: React.FC = () => {
   const [replyDrafts, setReplyDrafts] = useState<{ [key: string]: string }>({});
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<ClientOrder | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   // Load orders from Supabase + Local Storage cache (ONLY real client orders)
   const loadOrders = async () => {
@@ -224,27 +226,36 @@ export const OwnerOrders: React.FC = () => {
     window.open(`mailto:${order.email}?subject=${subject}&body=${body}`, '_blank');
   };
 
-  // Delete an order permanently
-  const handleDeleteOrder = async (orderId: string) => {
+  // Open custom in-UI delete confirmation modal (no window.confirm to avoid iframe issues)
+  const handlePromptDeleteOrder = (order: ClientOrder) => {
     playClickSound();
-    if (!window.confirm('Are you sure you want to delete this client order?')) return;
-    setUpdatingId(orderId);
+    setOrderToDelete(order);
+  };
+
+  // Permanently delete order from Supabase & LocalStorage
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    playClickSound();
+
+    const targetId = orderToDelete.id;
 
     try {
-      await supabase.from('hire_requests').delete().eq('id', orderId);
+      await supabase.from('hire_requests').delete().eq('id', targetId);
     } catch (err) {
       console.info('Supabase delete order notice:', err);
     }
 
     setOrders((prev) => {
-      const updated = prev.filter((o) => o.id !== orderId);
+      const updated = prev.filter((o) => o.id !== targetId);
       try {
         localStorage.setItem(LOCAL_STORAGE_ORDERS_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
 
-    setUpdatingId(null);
+    setIsDeleting(false);
+    setOrderToDelete(null);
     playSuccessSound();
   };
 
@@ -470,8 +481,8 @@ export const OwnerOrders: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Status Changer & Timestamp */}
-                    <div className="flex flex-wrap items-center gap-3">
+                    {/* Status Changer & Actions */}
+                    <div className="flex flex-wrap items-center gap-2.5">
                       <div className="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-xl border border-white/15 shadow-sm">
                         <span className="text-[10px] font-mono text-slate-400 pl-2">Status:</span>
                         <select
@@ -501,7 +512,16 @@ export const OwnerOrders: React.FC = () => {
                         </select>
                       </div>
 
-                      <div className="text-[11px] font-mono text-slate-500">
+                      <button
+                        onClick={() => handlePromptDeleteOrder(order)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600/90 border border-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                        title="Delete this order"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+
+                      <div className="text-[11px] font-mono text-slate-500 pl-1">
                         {new Date(order.created_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -641,12 +661,12 @@ export const OwnerOrders: React.FC = () => {
                         </button>
 
                         <button
-                          onClick={() => handleDeleteOrder(order.id)}
-                          disabled={updatingId === order.id}
-                          className="p-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40"
-                          title="Delete this order"
+                          onClick={() => handlePromptDeleteOrder(order)}
+                          className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600/90 border border-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                          title="Delete this order permanently"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete Order</span>
                         </button>
                       </div>
                     </div>
@@ -659,6 +679,93 @@ export const OwnerOrders: React.FC = () => {
         )}
 
       </div>
+
+      {/* Delete Confirmation In-UI Modal (prevents iframe alert/confirm issues) */}
+      {orderToDelete && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => !isDeleting && setOrderToDelete(null)}
+        >
+          <div 
+            className="glass-panel max-w-md w-full rounded-3xl p-6 sm:p-8 border border-rose-500/30 shadow-[0_0_50px_rgba(244,63,94,0.3)] relative bg-[#0d0914] text-left animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white font-display">Delete Client Order</h3>
+                  <span className="text-[10px] font-mono text-rose-400 font-semibold uppercase">Permanent Action</span>
+                </div>
+              </div>
+
+              {!isDeleting && (
+                <button
+                  onClick={() => setOrderToDelete(null)}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-300 mt-4 leading-relaxed">
+              Kya aap waqai is client order ko delete karna chahte hain? Ye order database aur dashboard dono se hamesha ke liye delete ho jayega.
+            </p>
+
+            <div className="my-4 p-4 rounded-2xl bg-black/50 border border-white/10 space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Client:</span>
+                <span className="text-white font-semibold">{orderToDelete.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Email:</span>
+                <span className="text-cyan-300 font-mono truncate max-w-[200px]">{orderToDelete.email}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Service:</span>
+                <span className="text-purple-300 truncate max-w-[200px]">{orderToDelete.service}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Budget:</span>
+                <span className="text-emerald-300 font-mono">{orderToDelete.budget}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Order ID:</span>
+                <span className="text-slate-400 font-mono">#{orderToDelete.id.slice(0, 8)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setOrderToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-white/10 hover:bg-white/15 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteOrder}
+                disabled={isDeleting}
+                className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 shadow-[0_0_20px_rgba(225,29,72,0.4)] transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <span>Deleting Order...</span>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Yes, Delete Order</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
