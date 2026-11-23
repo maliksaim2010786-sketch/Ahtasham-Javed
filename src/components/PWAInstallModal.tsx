@@ -61,9 +61,9 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
             <div className="w-12 h-12 rounded-2xl p-[2px] bg-gradient-to-tr from-cyan-400 via-purple-500 to-indigo-500 shadow-[0_0_20px_rgba(6,182,212,0.5)] shrink-0">
               <div className="w-full h-full rounded-[14px] bg-[#090b14] overflow-hidden flex items-center justify-center">
                 <img
-                  src="/pwa-192x192.png"
+                  src="/assets/aistudio/4d3001bf-002a-413a-8817-5afe29ac5538_6e3a9df5.png"
                   alt="Ahtasham Javed"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-top"
                 />
               </div>
             </div>

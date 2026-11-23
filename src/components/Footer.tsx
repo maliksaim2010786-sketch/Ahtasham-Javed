@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ArrowUp, Github, Linkedin, Twitter, MessageCircle } from 'lucide-react';
 import { PageId } from './Navbar';
 import { playClickSound } from '../utils/audio';
@@ -6,10 +6,21 @@ import { PWAInstallButton } from './PWAInstallButton';
 
 interface FooterProps {
   onNavigate?: (page: PageId) => void;
+  onGoHomeSinglePage?: () => void;
   onOpenProfile?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenProfile }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate, onGoHomeSinglePage, onOpenProfile }) => {
+  const clickTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current !== null) {
+        window.clearTimeout(clickTimerRef.current);
+      }
+    };
+  }, []);
+
   const scrollToTop = () => {
     playClickSound();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -36,6 +47,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenProfile }) => 
     }
   };
 
+  const handleLogoClick = () => {
+    if (clickTimerRef.current !== null) {
+      window.clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      playClickSound();
+      onOpenProfile?.();
+    } else {
+      clickTimerRef.current = window.setTimeout(() => {
+        clickTimerRef.current = null;
+        playClickSound();
+        if (onGoHomeSinglePage) {
+          onGoHomeSinglePage();
+        } else {
+          handleLinkClick('home');
+        }
+      }, 250);
+    }
+  };
+
   return (
     <footer className="border-t border-white/10 dark:border-white/10 light:border-slate-200 bg-black/90 dark:bg-black/90 light:bg-slate-50 py-12 text-slate-400 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -46,38 +76,29 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenProfile }) => 
             <div className="flex items-center justify-center md:justify-start gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  playClickSound();
-                  if (onOpenProfile) onOpenProfile();
-                  else handleLinkClick('home');
-                }}
-                className="cursor-pointer group"
-                title="Click to open full profile & photo"
-                aria-label="Open profile modal"
+                onClick={handleLogoClick}
+                className="flex items-center gap-3 cursor-pointer group text-left transition-transform hover:scale-[1.02] active:scale-95 focus:outline-none"
+                title="Click: Home Page · Double-Click: Quick About"
+                aria-label="Footer logo: single click for Home page, double click for quick About card"
               >
                 <div className="glow-rotating-ring w-10 h-10 rounded-full p-[2px] shadow-[0_0_10px_rgba(6,182,212,0.4)] group-hover:scale-110 transition-transform">
                   <div className="glow-rotating-inner w-full h-full rounded-full bg-slate-950 overflow-hidden flex items-center justify-center">
                     <img
-                      src="/assets/aistudio/a7c15d4c-657d-49ff-8146-81cda0bb2807_e1ecb5b4.png"
-                      alt="Ahtasham Javed"
-                      className="w-full h-full object-cover object-top scale-125 translate-y-0.5"
+                      src="/assets/aistudio/4d3001bf-002a-413a-8817-5afe29ac5538_6e3a9df5.png"
+                      alt="Ahtasham Javed Logo"
+                      className="w-full h-full object-cover object-top scale-105"
                     />
                   </div>
                 </div>
-              </button>
 
-              <button
-                type="button"
-                onClick={() => handleLinkClick('home')}
-                className="flex flex-col text-left cursor-pointer group"
-                title="Ahtasham Javed - Home"
-              >
-                <span className="font-display tracking-wider font-extrabold text-base text-white group-hover:text-cyan-400 transition-colors">
-                  AHTASHAM JAVED
-                </span>
-                <span className="text-[10px] font-mono tracking-widest text-cyan-400 -mt-0.5">
-                  3D WEB ARCHITECT
-                </span>
+                <div className="flex flex-col text-left">
+                  <span className="font-display tracking-wider font-extrabold text-base text-white group-hover:text-cyan-400 transition-colors">
+                    AHTASHAM JAVED
+                  </span>
+                  <span className="text-[10px] font-mono tracking-widest text-cyan-400 -mt-0.5">
+                    3D WEB ARCHITECT
+                  </span>
+                </div>
               </button>
             </div>
             <p className="text-xs text-slate-400">

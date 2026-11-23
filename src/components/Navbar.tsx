@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Menu, X, ArrowUpRight, LayoutGrid, Layers, LogIn, LogOut, ShieldCheck, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Volume2, VolumeX, Sun, Moon, Menu, X, ArrowUpRight, LayoutGrid, Layers, LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import { toggleSound, isSoundEnabled, playClickSound, playHoverSound } from '../utils/audio';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -8,6 +8,7 @@ export type PageId = 'home' | 'about' | 'skills' | 'projects' | 'services' | 'pr
 interface NavbarProps {
   activePage: PageId;
   onNavigate: (page: PageId) => void;
+  onGoHomeSinglePage?: () => void;
   viewMode: 'separate' | 'all';
   onToggleViewMode: () => void;
   onHireClick: () => void;
@@ -23,6 +24,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   activePage,
   onNavigate,
+  onGoHomeSinglePage,
   viewMode,
   onToggleViewMode,
   onHireClick,
@@ -37,13 +39,19 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
+  const clickTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 15);
     };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (clickTimerRef.current !== null) {
+        window.clearTimeout(clickTimerRef.current);
+      }
+    };
   }, []);
 
   const handleSoundToggle = () => {
@@ -74,6 +82,27 @@ export const Navbar: React.FC<NavbarProps> = ({
     setMobileMenuOpen(false);
   };
 
+  const handleLogoClick = () => {
+    if (clickTimerRef.current !== null) {
+      window.clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      playClickSound();
+      setMobileMenuOpen(false);
+      onOpenProfile?.();
+    } else {
+      clickTimerRef.current = window.setTimeout(() => {
+        clickTimerRef.current = null;
+        playClickSound();
+        setMobileMenuOpen(false);
+        if (onGoHomeSinglePage) {
+          onGoHomeSinglePage();
+        } else {
+          onNavigate('home');
+        }
+      }, 250);
+    }
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
@@ -84,25 +113,22 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
         
-        {/* Zone 1: Developer Brand Logo - Clicking opens Home Page */}
+        {/* Zone 1: Developer Brand Logo - Single click opens Home single page, Double click opens compact About card */}
         <button
           type="button"
-          onClick={() => {
-            playClickSound();
-            handleNavClick('home');
-          }}
+          onClick={handleLogoClick}
           className="flex items-center gap-3 shrink-0 cursor-pointer group text-left transition-transform hover:scale-[1.03] active:scale-95 focus:outline-none"
-          title="Click to go to Home Page"
-          aria-label="Home page logo"
+          title="Click: Home Page · Double-Click: Quick About"
+          aria-label="Portfolio logo: single click for Home page, double click for quick About card"
         >
           {/* Logo Avatar with rotating neon ring */}
           <div className="relative">
             <div className="glow-rotating-ring w-9 h-9 sm:w-10 sm:h-10 rounded-full p-[2px] shadow-[0_0_15px_rgba(6,182,212,0.45)] group-hover:shadow-[0_0_22px_rgba(168,85,247,0.6)] transition-all duration-300">
               <div className="glow-rotating-inner w-full h-full rounded-full bg-slate-950 overflow-hidden flex items-center justify-center">
                 <img
-                  src="/assets/aistudio/a7c15d4c-657d-49ff-8146-81cda0bb2807_e1ecb5b4.png"
-                  alt="Ahtasham Javed"
-                  className="w-full h-full object-cover object-top scale-125 translate-y-0.5 group-hover:scale-135 transition-transform duration-300"
+                  src="/assets/aistudio/4d3001bf-002a-413a-8817-5afe29ac5538_6e3a9df5.png"
+                  alt="Ahtasham Javed Logo"
+                  className="w-full h-full object-cover object-top scale-105 group-hover:scale-115 transition-transform duration-300"
                 />
               </div>
             </div>

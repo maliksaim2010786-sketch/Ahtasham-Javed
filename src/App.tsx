@@ -158,6 +158,14 @@ export default function App() {
     }
   };
 
+  // Single-click on Logo always opens the Home single page
+  const handleGoHomeSinglePage = () => {
+    setViewMode('separate');
+    setActivePage('home');
+    window.location.hash = 'home';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const toggleTheme = () => {
     setIsDark((prev) => !prev);
   };
@@ -183,6 +191,7 @@ export default function App() {
       <Navbar
         activePage={activePage}
         onNavigate={handleNavigate}
+        onGoHomeSinglePage={handleGoHomeSinglePage}
         viewMode={viewMode}
         onToggleViewMode={toggleViewMode}
         onHireClick={() => handleOpenHire()}
@@ -381,6 +390,7 @@ export default function App() {
       {/* Footer */}
       <Footer 
         onNavigate={handleNavigate}
+        onGoHomeSinglePage={handleGoHomeSinglePage}
         onOpenProfile={() => setProfileModalOpen(true)}
       />
 
@@ -391,13 +401,12 @@ export default function App() {
         defaultService={selectedServiceForHire}
       />
 
-      {/* Profile & HD Photo Lightbox Modal */}
+      {/* Compact Quick About Modal (opened on Logo double-click) */}
       <ProfileModal
         isOpen={profileModalOpen}
         onClose={() => setProfileModalOpen(false)}
-        onNavigateHome={() => handleNavigate('home')}
+        onNavigateHome={handleGoHomeSinglePage}
         onHireClick={() => handleOpenHire()}
-        onViewProjects={() => handleNavigate('projects')}
       />
 
       {/* Login / Authentication Gateway */}

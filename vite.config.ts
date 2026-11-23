@@ -96,7 +96,8 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
+          // Only enable dev SW when Vite HMR is active; when DISABLE_HMR=true, import.meta.hot.send crashes @vite/client
+          enabled: process.env.DISABLE_HMR !== 'true',
           type: 'module',
         },
       }),
