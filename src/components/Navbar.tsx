@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Menu, X, ArrowUpRight, LayoutGrid, Layers, LogIn, LogOut, ShieldCheck } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Menu, X, ArrowUpRight, LayoutGrid, Layers, LogIn, LogOut, ShieldCheck, Download } from 'lucide-react';
 import { toggleSound, isSoundEnabled, playClickSound, playHoverSound } from '../utils/audio';
+import { PWAInstallButton } from './PWAInstallButton';
 
 export type PageId = 'home' | 'about' | 'skills' | 'projects' | 'services' | 'process' | 'testimonials' | 'contact' | 'inbox';
 
@@ -235,6 +236,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
+          {/* PWA Install App Button (Windows PC, Laptop, Mobile) */}
+          <div className="flex items-center">
+            <PWAInstallButton variant="navbar" />
+          </div>
+
           {/* Primary CTA */}
           <button
             onClick={() => {
@@ -281,6 +287,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               );
             })}
+          </div>
+
+          {/* Mobile Install App Button */}
+          <div className="pt-2">
+            <PWAInstallButton variant="mobile" onInstallClicked={() => setMobileMenuOpen(false)} />
           </div>
 
           <div className="pt-3 flex flex-col gap-2 border-t border-white/10">

@@ -22,6 +22,7 @@ import { HireModal } from './components/HireModal';
 import { ProfileModal } from './components/ProfileModal';
 import { PaginationDock } from './components/PaginationDock';
 import { AuthGateway, AuthSession } from './components/AuthGateway';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { Lock } from 'lucide-react';
 
 export default function App() {
@@ -406,6 +407,9 @@ export default function App() {
         onCancel={() => setAuthModalOpen(false)}
         isInitialGate={!authSession.isAuthenticated}
       />
+
+      {/* Offline Connectivity Notification */}
+      <OfflineIndicator />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowUp, Github, Linkedin, Twitter, MessageCircle } from 'lucide-react';
 import { PageId } from './Navbar';
 import { playClickSound } from '../utils/audio';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface FooterProps {
   onNavigate?: (page: PageId) => void;
@@ -161,8 +162,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenProfile }) => 
             </a>
           </div>
 
-          <div className="text-[11px] text-slate-500 font-mono">
-            Crafted with React 19, TypeScript & Three.js
+          <div className="flex items-center gap-3">
+            <PWAInstallButton variant="footer" />
+            <div className="text-[11px] text-slate-500 font-mono hidden md:inline">
+              Crafted with React 19, TypeScript & Three.js
+            </div>
           </div>
         </div>
 

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Radial Glow (Full Bleed for Maskable) -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e1035" />
+      <stop offset="60%" stop-color="#0c0a1a" />
+      <stop offset="100%" stop-color="#05050b" />
+    </radialGradient>
+
+    <!-- Neon Ring Gradient -->
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="45%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+
+    <!-- Monogram Gradient -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="7" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Full Bleed Square Background for Maskable Icon -->
+  <rect width="512" height="512" fill="url(#bgGlow)" />
+
+  <!-- Scaled down to 80% to fit 100% inside Android Safe Zone -->
+  <g transform="translate(256, 256) scale(0.78) translate(-256, -256)">
+    <!-- Outer Cyber Tech Ring -->
+    <circle cx="256" cy="256" r="190" fill="none" stroke="url(#neonGrad)" stroke-width="7" opacity="0.9" filter="url(#neonGlow)" />
+    <circle cx="256" cy="256" r="172" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="12 10 4 10" opacity="0.6" />
+
+    <!-- Corner Tech Accents -->
+    <circle cx="256" cy="66" r="6" fill="#38bdf8" />
+    <circle cx="256" cy="446" r="6" fill="#ec4899" />
+    <circle cx="66" cy="256" r="6" fill="#06b6d4" />
+    <circle cx="446" cy="256" r="6" fill="#8b5cf6" />
+
+    <!-- Inner Dark Core Shield -->
+    <circle cx="256" cy="256" r="150" fill="#080811" stroke="#312e81" stroke-width="2" />
+
+    <!-- Stylized Geometric "AJ" Monogram -->
+    <g transform="translate(256, 256)" filter="url(#neonGlow)">
+      <!-- Stylized "A" -->
+      <path d="M -70 80 L -25 -65 L 5 -65 L -35 80 Z" fill="url(#textGrad)" />
+      <path d="M 0 -65 L 45 80 L 15 80 L -20 -30 Z" fill="url(#textGrad)" opacity="0.95" />
+      <polygon points="-52,30 25,30 18,12 -46,12" fill="url(#neonGrad)" />
+
+      <!-- Stylized "J" hook intersecting with "A" -->
+      <path d="M 32 -35 L 58 -35 L 58 45 C 58 78 35 95 -5 95 C -25 95 -45 88 -55 80 L -45 62 C -35 68 -22 75 -5 75 C 20 75 35 62 35 42 Z" fill="url(#textGrad)" />
+    </g>
+
+    <!-- Developer Sub-tag -->
+    <text x="256" y="385" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="800" letter-spacing="6" fill="#38bdf8" text-anchor="middle">AHTASHAM</text>
+    <text x="256" y="405" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" letter-spacing="4" fill="#a855f7" text-anchor="middle">3D ARCHITECT</text>
+  </g>
+</svg>
