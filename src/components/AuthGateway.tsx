@@ -92,23 +92,23 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({
 
       {/* Main Admin Access Card */}
       <div className="relative w-full max-w-md my-auto">
-        <div className="glow-rotating-ring rounded-3xl p-[2px] shadow-[0_0_40px_rgba(168,85,247,0.35)]">
-          <div className="glow-rotating-inner rounded-[22px] bg-[#090b14] p-6 sm:p-8 text-left relative overflow-hidden border border-white/10">
+        <div className="glow-rotating-ring !block w-full rounded-3xl p-[2px] shadow-[0_0_40px_rgba(168,85,247,0.35)] hover:!transform-none">
+          <div className="glow-rotating-inner !flex !flex-col !items-stretch !justify-start w-full rounded-[22px] bg-[#090b14] p-6 sm:p-8 text-left relative overflow-hidden border border-white/10">
             
             {/* Top Brand Header */}
             <div className="text-center space-y-3 mb-6">
-              {/* Avatar with spinning ring */}
+              {/* Brand Logo Avatar with gradient ring */}
               <div className="relative inline-block mx-auto">
-                <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-purple-500 to-indigo-500 shadow-[0_0_20px_rgba(6,182,212,0.6)]">
+                <div className="w-20 h-20 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-purple-500 to-indigo-500 shadow-[0_0_24px_rgba(6,182,212,0.55)]">
                   <div className="w-full h-full rounded-full bg-slate-950 overflow-hidden flex items-center justify-center">
                     <img
-                      src="/assets/aistudio/a7c15d4c-657d-49ff-8146-81cda0bb2807_e1ecb5b4.png"
-                      alt="Ahtasham Javed"
-                      className="w-full h-full object-cover object-top scale-125 translate-y-0.5"
+                      src="/assets/aistudio/4d3001bf-002a-413a-8817-5afe29ac5538_6e3a9df5.png"
+                      alt="Ahtasham Javed Logo"
+                      className="w-full h-full object-cover object-top scale-105"
                     />
                   </div>
                 </div>
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#090b14] shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
+                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#090b14] shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
               </div>
 
               <div>

@@ -271,8 +271,8 @@ export const Testimonials: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
           <div className="relative w-full max-w-lg my-auto">
-            <div className="glow-rotating-ring rounded-3xl p-[2px] shadow-2xl">
-              <div className="glow-rotating-inner rounded-[22px] bg-[#090b14] p-6 sm:p-8 text-left relative overflow-hidden border border-white/15">
+            <div className="glow-rotating-ring !block w-full rounded-3xl p-[2px] shadow-2xl hover:!transform-none">
+              <div className="glow-rotating-inner !flex !flex-col !items-stretch !justify-start w-full rounded-[22px] bg-[#090b14] p-6 sm:p-8 text-left relative overflow-hidden border border-white/15">
                 
                 {/* Close Button */}
                 <button
