@@ -23,6 +23,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { PaginationDock } from './components/PaginationDock';
 import { AuthGateway, AuthSession } from './components/AuthGateway';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { FloatingParticles } from './components/FloatingParticles';
 import { Lock } from 'lucide-react';
 
 export default function App() {
@@ -186,6 +187,9 @@ export default function App() {
     <div className="min-h-screen bg-[#050508] dark:bg-[#050508] light:bg-[#f8fafc] text-slate-100 dark:text-slate-100 light:text-slate-900 transition-colors duration-300 font-sans relative selection:bg-purple-600 selection:text-white flex flex-col justify-between">
       {/* Custom Magnetic Trailing Cursor */}
       <CustomCursor />
+
+      {/* Floating Background Cyber Particles & Orbs */}
+      <FloatingParticles />
 
       {/* Top Bar Navigation */}
       <Navbar

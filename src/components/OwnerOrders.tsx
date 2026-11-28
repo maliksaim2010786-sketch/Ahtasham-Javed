@@ -3,7 +3,7 @@ import {
   ShoppingBag, Clock, CheckCircle2, Send, RefreshCw, Mail, 
   MessageCircle, Search, Filter, Sparkles, Copy, Check, 
   Briefcase, DollarSign, Calendar, ArrowUpRight, 
-  ShieldCheck, AlertCircle, Trash2, X
+  ShieldCheck, AlertCircle, Trash2, X, KeyRound, Lock, Eye, EyeOff
 } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { playClickSound, playSuccessSound, playHoverSound } from '../utils/audio';
@@ -50,6 +50,46 @@ export const OwnerOrders: React.FC = () => {
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [orderToDelete, setOrderToDelete] = useState<ClientOrder | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [adminTab, setAdminTab] = useState<'orders' | 'security'>('orders');
+  const [oldAdminPass, setOldAdminPass] = useState('');
+  const [newAdminPass, setNewAdminPass] = useState('');
+  const [confirmAdminPass, setConfirmAdminPass] = useState('');
+  const [showOldPass, setShowOldPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMsg(null);
+    playClickSound();
+
+    const currentStoredPass = localStorage.getItem('ahtasham_admin_custom_password') || 'webstudio5911';
+
+    if (oldAdminPass.trim() !== currentStoredPass) {
+      playClickSound();
+      setPasswordMsg({ type: 'error', text: 'Purana password galat hai. Sahi purana password enter karein.' });
+      return;
+    }
+
+    if (!newAdminPass.trim() || newAdminPass.length < 4) {
+      playClickSound();
+      setPasswordMsg({ type: 'error', text: 'Naya password kam az kam 4 characters ka hona chahiye.' });
+      return;
+    }
+
+    if (newAdminPass !== confirmAdminPass) {
+      playClickSound();
+      setPasswordMsg({ type: 'error', text: 'Naya password aur confirm password match nahi kar rahe.' });
+      return;
+    }
+
+    localStorage.setItem('ahtasham_admin_custom_password', newAdminPass.trim());
+    playSuccessSound();
+    setPasswordMsg({ type: 'success', text: 'Master Admin Password kamyabi ke sath change ho gaya hai!' });
+    setOldAdminPass('');
+    setNewAdminPass('');
+    setConfirmAdminPass('');
+  };
 
   // Load orders from Supabase + Local Storage cache (ONLY real client orders)
   const loadOrders = async () => {
@@ -328,8 +368,164 @@ export const OwnerOrders: React.FC = () => {
           </div>
         </div>
 
-        {/* Orders Metrics Strip */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Navigation Tabs Bar */}
+        <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setAdminTab('orders');
+            }}
+            className={`px-5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              adminTab === 'orders'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                : 'glass-panel text-slate-300 hover:text-white'
+            }`}
+          >
+            <ShoppingBag className="w-4 h-4 text-cyan-400" />
+            <span>Client Orders Hub</span>
+            {newCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-cyan-500 text-black font-mono font-bold text-[10px]">
+                {newCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              playClickSound();
+              setAdminTab('security');
+            }}
+            className={`px-5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              adminTab === 'security'
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                : 'glass-panel text-slate-300 hover:text-white'
+            }`}
+          >
+            <KeyRound className="w-4 h-4 text-purple-400" />
+            <span>Admin Security & Password</span>
+          </button>
+        </div>
+
+        {adminTab === 'security' ? (
+          /* =========================================================
+             ADMIN SECURITY & PASSWORD CHANGE PANEL
+             ========================================================= */
+          <div className="max-w-xl mx-auto py-10">
+            <div className="glass-panel rounded-3xl p-8 border border-purple-500/30 bg-purple-950/20 shadow-2xl space-y-6">
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                  <KeyRound className="w-7 h-7 text-cyan-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-white font-display">
+                  Change Admin Master Password
+                </h2>
+                <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                  Enter your current (old) master password followed by your new password to secure portfolio admin access.
+                </p>
+              </div>
+
+              {passwordMsg && (
+                <div className={`p-3.5 rounded-xl border flex items-start gap-2.5 text-xs animate-in fade-in duration-200 ${
+                  passwordMsg.type === 'success'
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
+                    : 'bg-rose-500/15 border-rose-500/40 text-rose-200'
+                }`}>
+                  <AlertCircle className={`w-4 h-4 shrink-0 mt-0.5 ${passwordMsg.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`} />
+                  <span className="leading-relaxed">{passwordMsg.text}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                {/* Old Password */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Current Admin Password (Purana Password) *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showOldPass ? 'text' : 'password'}
+                      required
+                      placeholder="Enter current password..."
+                      value={oldAdminPass}
+                      onChange={(e) => setOldAdminPass(e.target.value)}
+                      className="w-full px-4 py-3 pr-11 rounded-xl bg-black/60 border border-white/15 text-white text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playClickSound();
+                        setShowOldPass(!showOldPass);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    New Admin Password (Naya Password) *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNewPass ? 'text' : 'password'}
+                      required
+                      placeholder="Enter new password (min 4 chars)..."
+                      value={newAdminPass}
+                      onChange={(e) => setNewAdminPass(e.target.value)}
+                      className="w-full px-4 py-3 pr-11 rounded-xl bg-black/60 border border-white/15 text-white text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playClickSound();
+                        setShowNewPass(!showNewPass);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm New Password */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Confirm New Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Re-enter new password..."
+                    value={confirmAdminPass}
+                    onChange={(e) => setConfirmAdminPass(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-black/60 border border-white/15 text-white text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-[0_0_20px_rgba(168,85,247,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  >
+                    <Lock className="w-4 h-4 text-cyan-300" />
+                    <span>Update Admin Master Password</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        ) : (
+          /* =========================================================
+             CLIENT ORDERS HUB VIEW
+             ========================================================= */
+          <>
+            {/* Orders Metrics Strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="glass-panel p-5 rounded-2xl border border-white/10 hover:border-cyan-400/40 transition-all">
             <div className="flex items-center justify-between text-slate-400 text-[11px] font-mono uppercase">
               <span>Total Orders Received</span>
@@ -677,6 +873,8 @@ export const OwnerOrders: React.FC = () => {
             })}
           </div>
         )}
+      </>
+    )}
 
       </div>
 

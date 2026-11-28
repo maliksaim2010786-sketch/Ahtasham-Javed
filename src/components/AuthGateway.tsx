@@ -37,8 +37,10 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({
     }
   }, [isOpen]);
 
-  // Admin Master Password as requested
-  const ADMIN_PASSWORD = 'webstudio5911';
+  // Admin Master Password (customizable from Owner Security Settings)
+  const ADMIN_PASSWORD = typeof window !== 'undefined' 
+    ? (localStorage.getItem('ahtasham_admin_custom_password') || 'webstudio5911')
+    : 'webstudio5911';
 
   if (!isOpen) return null;
 

@@ -33,9 +33,25 @@ export const Testimonials: React.FC = () => {
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [reviewText, setReviewText] = useState('');
 
-  // Fetch real reviews from Supabase
+  // Fetch real reviews from Supabase (and preserve cached real reviews for offline viewing)
   const fetchReviews = async () => {
     setLoading(true);
+    const REVIEWS_CACHE_KEY = 'ahtasham_client_reviews_cache';
+    try {
+      const cached = localStorage.getItem(REVIEWS_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setReviews(parsed as ClientReview[]);
+        }
+      }
+    } catch {}
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('client_reviews')
@@ -44,6 +60,9 @@ export const Testimonials: React.FC = () => {
 
       if (!error && data) {
         setReviews(data as ClientReview[]);
+        try {
+          localStorage.setItem(REVIEWS_CACHE_KEY, JSON.stringify(data));
+        } catch {}
       }
     } catch (err) {
       console.info('Reviews fetch note:', err);

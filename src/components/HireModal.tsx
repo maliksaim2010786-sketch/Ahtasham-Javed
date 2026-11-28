@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, MessageCircle, Sparkles, Check, ArrowRight } from 'lucide-react';
+import { X, Send, MessageCircle, Check, WifiOff, AlertCircle } from 'lucide-react';
 import { playClickSound, playSuccessSound } from '../utils/audio';
 import { supabase } from '../utils/supabase';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 interface HireModalProps {
   isOpen: boolean;
@@ -22,10 +23,24 @@ export const HireModal: React.FC<HireModalProps> = ({
   const [details, setDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const isOnline = useOnlineStatus();
 
   useEffect(() => {
     setSelectedService(defaultService);
   }, [defaultService]);
+
+  useEffect(() => {
+    if (isOnline) {
+      setErrorMsg(null);
+    }
+  }, [isOnline]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setErrorMsg(null);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -41,6 +56,14 @@ export const HireModal: React.FC<HireModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+
+    if (!navigator.onLine || !isOnline) {
+      playClickSound();
+      setErrorMsg('You are currently offline. Please connect to the internet to place an order.');
+      return;
+    }
+
     playClickSound();
     setIsSubmitting(true);
 
@@ -57,11 +80,19 @@ export const HireModal: React.FC<HireModalProps> = ({
       created_at: new Date().toISOString(),
     };
 
-    // 1. Save to Supabase
+    // 1. Save to Supabase (Online Only)
     try {
-      await supabase.from('hire_requests').insert([newOrderData]);
+      const { error } = await supabase.from('hire_requests').insert([newOrderData]);
+      if (error) {
+        setIsSubmitting(false);
+        setErrorMsg('Could not send order. Please verify your internet connection and try again.');
+        return;
+      }
     } catch (err) {
       console.info('Supabase hire inquiry notice:', err);
+      setIsSubmitting(false);
+      setErrorMsg('Network error while submitting order. Please check your internet connection.');
+      return;
     }
 
     // 2. Cache in localStorage so Owner Orders dashboard displays it instantly
@@ -82,6 +113,11 @@ export const HireModal: React.FC<HireModalProps> = ({
   };
 
   const handleWhatsApp = () => {
+    if (!navigator.onLine || !isOnline) {
+      playClickSound();
+      setErrorMsg('Internet connection is required to open WhatsApp.');
+      return;
+    }
     playClickSound();
     const msg = encodeURIComponent(
       `Hi Ahtasham! I'd like to hire you for ${selectedService}. Budget: ${budget}, Timeline: ${timeline}. My name is ${name || 'there'}.`
@@ -145,6 +181,27 @@ export const HireModal: React.FC<HireModalProps> = ({
             <p className="text-xs text-slate-300 leading-relaxed">
               Let's create something extraordinary. Tell me about your requirements below, or launch an instant WhatsApp session.
             </p>
+
+            {/* Offline Warning Banner: Orders require active internet */}
+            {!isOnline && (
+              <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-400/40 flex items-start gap-2.5 text-xs text-amber-200 animate-in fade-in duration-200">
+                <WifiOff className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                <div className="space-y-0.5">
+                  <div className="font-semibold text-amber-300">You are currently offline</div>
+                  <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                    You can browse the entire portfolio offline, but placing a project order requires an active internet connection.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Submission Error Banner */}
+            {errorMsg && isOnline && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-start gap-2.5 text-xs text-rose-200 animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                <span className="leading-relaxed">{errorMsg}</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -240,10 +297,15 @@ export const HireModal: React.FC<HireModalProps> = ({
             <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full sm:flex-1 py-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                disabled={isSubmitting || !isOnline}
+                className="w-full sm:flex-1 py-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                {isSubmitting ? (
+                {!isOnline ? (
+                  <>
+                    <WifiOff className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Internet Required to Place Order</span>
+                  </>
+                ) : isSubmitting ? (
                   <span>Transmitting...</span>
                 ) : (
                   <>
@@ -256,8 +318,9 @@ export const HireModal: React.FC<HireModalProps> = ({
               <button
                 type="button"
                 onClick={handleWhatsApp}
-                className="w-full sm:w-auto px-4 py-3 rounded-xl text-xs font-semibold text-white bg-emerald-600/80 hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
-                title="Send via WhatsApp directly"
+                disabled={!isOnline}
+                className="w-full sm:w-auto px-4 py-3 rounded-xl text-xs font-semibold text-white bg-emerald-600/80 hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                title={isOnline ? 'Send via WhatsApp directly' : 'Internet required for WhatsApp'}
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>WhatsApp Instant</span>

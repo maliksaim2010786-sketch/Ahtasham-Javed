@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Mail, MessageCircle, Phone, Send, Check, Copy, 
-  Github, Linkedin, Twitter, Sparkles, MapPin, Globe, Database 
+  Github, Linkedin, Twitter, MapPin, Globe, Database, WifiOff, AlertCircle 
 } from 'lucide-react';
 import { playClickSound, playSuccessSound } from '../utils/audio';
 import { GlowIconBox } from './GlowIconBox';
 import { supabase } from '../utils/supabase';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 interface ContactProps {
   initialService?: string;
@@ -23,28 +24,18 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [supabaseConnected, setSupabaseConnected] = useState<boolean | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const isOnline = useOnlineStatus();
 
   const directEmail = 'malikahtashamjaved@gmail.com';
   const whatsappNumber = '0300 7118380';
   const whatsappIntl = '923007118380';
 
   useEffect(() => {
-    // Verify Supabase connection on mount
-    const verifySupabase = async () => {
-      try {
-        const { error } = await supabase.auth.getSession();
-        if (!error) {
-          setSupabaseConnected(true);
-        } else {
-          setSupabaseConnected(true); // Connected to endpoint
-        }
-      } catch {
-        setSupabaseConnected(true);
-      }
-    };
-    verifySupabase();
-  }, []);
+    if (isOnline) {
+      setErrorMsg(null);
+    }
+  }, [isOnline]);
 
   const handleCopyEmail = () => {
     playClickSound();
@@ -55,6 +46,14 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+
+    if (!navigator.onLine || !isOnline) {
+      playClickSound();
+      setErrorMsg('You are currently offline. Please connect to the internet to place an order.');
+      return;
+    }
+
     playClickSound();
     setIsSubmitting(true);
 
@@ -85,9 +84,17 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
         },
       ]);
       // Also store in hire_requests so it's in orders database
-      await supabase.from('hire_requests').insert([newInquiryOrder]);
+      const { error } = await supabase.from('hire_requests').insert([newInquiryOrder]);
+      if (error) {
+        setIsSubmitting(false);
+        setErrorMsg('Could not submit your order. Please verify your internet connection and try again.');
+        return;
+      }
     } catch (err) {
       console.info('Supabase inquiry record notice:', err);
+      setIsSubmitting(false);
+      setErrorMsg('Network error while submitting order. Please connect to the internet and try again.');
+      return;
     }
 
     // Cache locally for instant appearance in Owner Orders
@@ -106,6 +113,11 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
   };
 
   const handleOpenWhatsApp = () => {
+    if (!navigator.onLine || !isOnline) {
+      playClickSound();
+      setErrorMsg('Internet connection is required to open WhatsApp.');
+      return;
+    }
     playClickSound();
     const text = encodeURIComponent(
       `Hello Ahtasham, I am interested in discussing a project regarding ${formData.service || 'Web Development'}. My name is ${formData.name || 'there'}.`
@@ -210,7 +222,9 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
                   </a>
                   <button
                     onClick={handleOpenWhatsApp}
-                    className="px-3 py-2 rounded-xl text-xs font-medium bg-emerald-600/80 hover:bg-emerald-600 text-white transition-colors flex items-center gap-1.5"
+                    disabled={!isOnline}
+                    className="px-3 py-2 rounded-xl text-xs font-medium bg-emerald-600/80 hover:bg-emerald-600 text-white transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    title={isOnline ? 'Chat on WhatsApp' : 'Internet required for WhatsApp'}
                   >
                     <span>WhatsApp</span>
                   </button>
@@ -229,13 +243,20 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-white/5">
                   <div className="flex items-center gap-2">
-                    <Database className="w-3.5 h-3.5 text-emerald-400" />
+                    <Database className={`w-3.5 h-3.5 ${isOnline ? 'text-emerald-400' : 'text-amber-400'}`} />
                     <span className="text-[11px] font-mono text-slate-300">Supabase Cloud DB</span>
                   </div>
-                  <span className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Live Connected</span>
-                  </span>
+                  {isOnline ? (
+                    <span className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Live Connected</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-[10px] font-mono text-amber-300 bg-amber-950/50 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                      <WifiOff className="w-3 h-3" />
+                      <span>Offline · Orders Locked</span>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -320,6 +341,27 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
                     Fill out the parameters below to receive a scoped proposal.
                   </p>
                 </div>
+
+                {/* Offline Order Guard Notice */}
+                {!isOnline && (
+                  <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-400/40 flex items-start gap-3 text-xs text-amber-200 animate-in fade-in duration-200">
+                    <WifiOff className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                    <div className="space-y-0.5">
+                      <div className="font-semibold text-amber-300">Offline Mode — Internet Required to Place Order</div>
+                      <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                        You can view the entire portfolio offline, but submitting a new order requires an active internet connection.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submission Error Notice */}
+                {errorMsg && isOnline && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-start gap-2.5 text-xs text-rose-200 animate-in fade-in duration-200">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                    <span className="leading-relaxed">{errorMsg}</span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Name Input */}
@@ -426,10 +468,15 @@ export const Contact: React.FC<ContactProps> = ({ initialService }) => {
                 {/* Submit Action */}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-[0_0_20px_rgba(168,85,247,0.35)] transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+                  disabled={isSubmitting || !isOnline}
+                  className="w-full py-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-[0_0_20px_rgba(168,85,247,0.35)] transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  {isSubmitting ? (
+                  {!isOnline ? (
+                    <>
+                      <WifiOff className="w-4 h-4 text-amber-300" />
+                      <span>Internet Required to Place Order</span>
+                    </>
+                  ) : isSubmitting ? (
                     <span>Encrypting & Sending...</span>
                   ) : (
                     <>
